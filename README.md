@@ -13,11 +13,11 @@ The repository contains code for cleaning, analyzing, and visualizing data for a
 	- [ ] Common header in all pages
 	- [ ] Page number as footer in all pages
 	- [ ] District name in the same line as a 4-digit District ID. Note: All public schools ADM in one block and non-public schools (charter, web, etc.) are in separate block
-	- [ ] Before first entry for each school district, there is <year> Extended ADMw as the title. 
+	- [ ] Before first entry for each school district, there is `year` Extended ADMw as the title. 
 	- [ ] Color (grey-white) background separated different schools (2 on 1 page).
 	- [ ] First line in each shaded block: school name.
-	- [ ] Rows: ADMr, Students in ESL, Students in Pregnant and Parenting Programs, <Total> IEP Students capped at 11% of District ADMr; Students on IEP Above 11% of ADMr; Students in Poverty; Students in Foster Care and Neglected/Delinquent; Remote Elementary School Correction; Small High School Correction. For different years, there might be differences in the row descriptions. Extract all rows of the file should be a function in itself.
-	- [ ] There are 4 columns per row: 2 for recent year and 2 for previous year. The syntax for the first row of each year is <total> X <weight>= and the second row of each year is <weighted ADMw>.
+	- [ ] Rows: ADMr, Students in ESL, Students in Pregnant and Parenting Programs, `Total` IEP Students capped at 11% of District ADMr; Students on IEP Above 11% of ADMr; Students in Poverty; Students in Foster Care and Neglected/Delinquent; Remote Elementary School Correction; Small High School Correction. For different years, there might be differences in the row descriptions. Extract all rows of the file should be a function in itself.
+	- [ ] There are 4 columns per row: 2 for recent year and 2 for previous year. The syntax for the first row of each year is `total` X `weight`= and the second row of each year is `weighted ADMw`.
 	- [ ] Last row has weighted ADMw for each year (no row name). 
 	- [ ] The actual granted weighted ADMw is the max of weighted ADM for this and last year to allow schools to adapt to lower enrollment. 
 
@@ -42,5 +42,3 @@ The repository contains code for cleaning, analyzing, and visualizing data for a
 # Analysis and To-Dos 
 
 To be added
-
-
