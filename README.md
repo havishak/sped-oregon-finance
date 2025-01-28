@@ -5,9 +5,11 @@ The repository contains code for cleaning, analyzing, and visualizing data for a
 # Data Sources and Cleaning To-Dos
 
 1. Funding allocation to districts based on student characteristics from 2011-2023
+
 [] There are multiple files for each year. Read file name and retain the last updated version by checking the date in the file name.
 [] Read the flagged version into R.
 [] Make a template of what information lies where: 
+
 	[] Common header in all pages
 	[] Page number as footer in all pages
 	[] District name in the same line as a 4-digit District ID. Note: All public schools ADM in one block and non-public schools (charter, web, etc.) are in separate block
@@ -20,15 +22,18 @@ The repository contains code for cleaning, analyzing, and visualizing data for a
 	[] The actual granted weighted ADMw is the max of weighted ADM for this and last year to allow schools to adapt to lower enrollment. 
 
 2. School-level expenditure data from 2019-2023
+
 [] Read each file and toggle to sheet (usually 1) that has detailed listing.
 [] Summarize by Function Cd, Object Cd, Area of Responsibility
 [] Tease out pattern in Area of Responsibility and other codes
 
 3. District-level revenue data from 2019-2023
+
 [] Read each file and toggle to sheet (usually 1) that has detailed listing.
 [] Summarize by Fund Cd and Source Cd
 
 4. Reimbursements to districts from their High-cost disability grant
+
 [] From year summary file, get grant aid and threshold
 [] From actual payment file, get all variables (actual expenditure, predicted, and reconciliatory payment)
 
@@ -36,6 +41,6 @@ The repository contains code for cleaning, analyzing, and visualizing data for a
 
 # Analysis and To-Dos 
 
-<To Add>
+To be added
 
 
