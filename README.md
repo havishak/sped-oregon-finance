@@ -6,8 +6,8 @@ The repository contains code for cleaning, analyzing, and visualizing data for a
 
 1. Funding allocation to districts based on student characteristics from 2011-2023
 
-- [ ] There are multiple files for each year. Read file name and retain the last updated version by checking the date in the file name.
-- [ ] Read the flagged version into R.
+- [ X ] There are multiple files for each year. Read file name and retain the last updated version by checking the date in the file name.
+- [ X ] Read the flagged version into R.
 - [ ] Make a template of what information lies where: 
 
 	- [ ] Common header in all pages

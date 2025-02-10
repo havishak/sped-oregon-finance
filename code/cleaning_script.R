@@ -12,7 +12,7 @@ file_to_read <- function(directory_path) {
   dir_list <- setdiff(dir_list, directory_path)
   
   # list files in each directory and extract the dates
-  files_list <- map_dfr(dir_list,
+  file_list <- map_dfr(dir_list,
                         ~ tibble(
                           files = list.files(.x),
                           dir = .x,
@@ -86,8 +86,48 @@ year_district_data <- function(file_path){
     left_join(get_district_page) %>%
     split(., .$district_index)
   
+  # remove rows with reduntant information from all dfs
+  
+  district_year_list <-  map(district_year_list, ~.x %>%
+    mutate(text_length = nchar(text),
+           remove_text = ifelse(grepl(paste0("^",school_year), text) & text_length < 25, 1,0)) %>%
+    filter(!grepl("^STATE|^As|^Page", text),
+           remove_text == 0) %>%
+    select(text, page, y_corrected))
+  
+  
   return(district_year_list)
 }
+
+
+one_district_info <- function(district_df){
+  
+  # claissify info
+  
+  district_df <- district_df %>% 
+    mutate(
+      information_type = case_when(
+        grepl("District ID", text) ~ "district_info",
+        grepl(":", text) ~ "category_info",
+        grepl("ADMw", text) ~ "total",
+        TRUE ~ "entry_name"
+      )
+    )  %>%
+    mutate(entry_index = cumsum(information_type == "entry_name"))
+ 
+  # grab district level info
+ district_details <- district_df %>% 
+   filter(information_type == "district_info") %>%
+   select(text) %>%
+   unlist() %>%
+   str_match(., "^(.*?),\\s*(.*?)\\s*District ID:\\s*(\\d+)$")
+ 
+  
+}
+  
+sy11_12 <- file_to_read("data_raw/District Estimates ADMw Breakouts")
+sy11_12_districts <- year_district_data(sy11_12$file_path[1])
+a <- sy11_12_districts[[1]]
 
 ## Template
 ## Ignore: Starting with State, As, Page, school_year if length < 20
@@ -97,7 +137,7 @@ a <- a %>%
          remove_text = ifelse(grepl("^2011", text) & text_length < 25, 1,0)) %>%
   filter(!grepl("^STATE|^As|^Page", text),
          remove_text == 0) %>%
-  select(text, page, y)
+  select(text, page, y_corrected)
 
 # line 1: location, district name District ID: number
 # arrange by y and page entry. categories start at ADMr: 
@@ -106,6 +146,38 @@ a <- a %>%
 # Lines in between has categories in the format Category: ADM_current X weight = ADMw_current ADM_past X 1.00 = ADMw_past (so 6 values to extract)
 
 # last row is extended ADMw combined for the district
+a <- a %>% 
+  mutate(
+    information_type = case_when(
+      grepl("District ID", text) ~ "district_info",
+      grepl(":", text) ~ "category_info",
+      grepl("ADMw", text) ~ "total",
+      TRUE ~ "entry_name"
+    )
+  )
+
+# district details
+a %>% 
+  filter(information_type == "district_info") %>%
+  select(text) %>%
+  unlist() %>%
+  str_match(., "^(.*?),\\s*(.*?)\\s*District ID:\\s*(\\d+)$")
+
+# 
+pattern <-  "(.*):\\s*([\\d,]+\\.\\d+)\\s*X\\s*([\\d.]+)\\s*=\\s*([\\d,]+\\.\\d+)\\s*([\\d,]+\\.\\d+)\\s*X\\s*([\\d.]+)\\s*=\\s*([\\d,]+\\.\\d+)"
+
+a %>% 
+  filter(information_type == "category_info") %>%
+  select(text) %>%
+  unlist() %>%
+  str_match(., pattern)
+
+b <- a %>%
+  mutate(entry_index = cumsum(information_type == "entry_name"))
+
+
+st
+
 district_row <- grep("District ID", a$text)
 district_info <- str_match(a$text[district_row], "^(.*?),\\s*(.*?)\\s*District ID:\\s*(\\d+)$")
 district_geo <- district_info[2]
