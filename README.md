@@ -8,7 +8,7 @@ The repository contains code for cleaning, analyzing, and visualizing data for a
 
 - [ X ] There are multiple files for each year. Read file name and retain the last updated version by checking the date in the file name.
 - [ X ] Read the flagged version into R.
-- [ ] Make a template of what information lies where: 
+- [ X ] Make a template of what information lies where: 
 
 	- [ ] Common header in all pages
 	- [ ] Page number as footer in all pages
