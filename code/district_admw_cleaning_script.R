@@ -1,4 +1,4 @@
-# Collection of functions to read and clean ADMw files.
+# Collection of functions to read and clean District ADMw files.
 library(tidyverse)
 library(pdftools)
 
