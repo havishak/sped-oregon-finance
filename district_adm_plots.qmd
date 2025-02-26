@@ -1,0 +1,234 @@
+---
+title: "An Overview of Oregon's State Funding Allocation"
+format: closeread-html
+---
+
+:::{.cr-section}
+
+This Project
+
+
+:::{#cr-myplot}
+```{r}
+hist(rnorm(15))
+```
+:::
+
+When this paragraph scrolls into view it will reveal a histogram. @cr-myplot
+
+
+The state of Oregon uses a student-based funding model to allocate revenues to its 197 school districts. In this article, I will describe trends in funding allocation from 2011 to 2024. 
+
+
+```{r}
+# load libraries
+library(tidyverse)
+library(plotly)
+```
+
+
+```{r}
+district_year_adm <- readr::read_csv(here::here("data_clean/district_year_admw.csv")) %>%
+  select(-1) %>%
+  # make columns for iep related information
+  #group_by(school_year, entry_name, district_name) 
+  rowwise() %>%
+  mutate(district_iep_students = 
+           ifelse(grepl("IEP Students", category), parse_number(category),NA)) %>%
+  ungroup() %>%
+  group_by(district_id, school_year) %>%
+  mutate(district_iep_students = sum(district_iep_students, na.rm = T),
+         district_iep_percent = district_iep_students/current_year_adm_district, 
+         district_iep_11 = sum(current_year_adm[grepl("IEP Students", category)]),
+         district_iep_above_11 = sum(current_year_adm[grepl("IEP Above", category)]),
+         district_iep_no_extra = district_iep_students - district_iep_11 - district_iep_above_11,
+         district_iep_eff_weight = (district_iep_11 + district_iep_above_11)/district_iep_students
+         )
+
+hcd_year <-  readr::read_csv(here::here("data_clean/hcd_year_good.csv")) %>%
+  select(-1)
+```
+
+```{r}
+year_dotplot <- function(df, var_y , var_x, log_on = T,
+                         lab_x = "", lab_y = "Year"){
+  
+  plot <- district_year_adm %>%
+  distinct(district_id, {{var_y}}, {{var_x}}, district_name) %>%
+  ggplot(aes(y = fct_rev(factor({{var_y}})), x = {{var_x}}, color = {{var_x}})) +
+  geom_jitter(show.legend = F, alpha = 0.4) +
+  geom_boxplot(outliers = F, fill = "transparent", show.legend = F)+
+  labs(
+    x = lab_x,
+    y = lab_y
+  ) +
+  theme_minimal() +
+ scale_color_continuous(type = "viridis")
+  
+  if(log_on == TRUE){
+    plot <- plot +
+      scale_color_continuous(trans = "log10", type = "viridis")+
+      scale_x_continuous(trans = "log10",
+                     breaks = c(1, 10, 100, 1000, 10000))
+      
+  }
+
+  return(plot)
+}
+
+one_year_scatterplot <- function(df, year = 2011, 
+                                 var_y, var_x, log_x_on = T, log_y_on = T,
+                                lab_x = "", lab_y = "") {
+  
+  plot <- df %>%
+  filter(school_year == year) %>%
+  distinct(school_year, {{var_x}}, {{var_y}}) %>%
+  ggplot(aes(x = {{var_x}}, y = {{var_y}})) +
+  geom_point() +
+  labs(
+    x = lab_x,
+    y = lab_y
+  ) +
+  theme_minimal()  +
+  theme(
+    panel.grid.minor = element_blank()
+  )
+  
+  if(log_x_on == TRUE){
+    plot <- plot +
+      scale_x_continuous(trans = "log10",
+                     breaks = c(1, 10, 100, 1000, 10000))
+  }
+  
+  if(log_y_on == TRUE){
+    plot <- plot +
+      scale_y_continuous(trans = "log10",
+                     breaks = c(1, 10, 100, 1000, 10000))
+  }
+  
+  return(plot)
+  
+}
+```
+
+:::{.cr-section}
+
+:::{#cr-stateprop}
+```{r}
+
+```
+:::
+
+
+District-ADM by school year
+
+```{r}
+year_dotplot(district_year_adm,
+             var_y = school_year,
+             var_x = current_year_adm_district,
+             log_on = T,
+             lab_x = "District Average Daily Membership (ADM)") 
+```
+
+What proportion of District-ADM do districts get?
+
+```{r}
+district_year_adm %>%
+  distinct(school_year, district_id, current_year_adm_district, current_year_admw_district) %>%
+  mutate(
+    adm_admw_ratio = current_year_admw_district/current_year_adm_district
+  ) %>%
+  one_year_scatterplot(df = ., var_y = adm_admw_ratio, var_x = current_year_adm_district, log_y_on = F,
+                       lab_x = "District ADM",
+                       lab_y = "Allocation rate per student") +
+  scale_y_continuous(limits = c(0,10),
+                     breaks = 0:10)
+
+district_year_adm %>%
+  distinct(school_year, district_id, current_year_admw_district, current_year_eff_admw_district) %>%
+  mutate(extra = current_year_eff_admw_district - current_year_admw_district) %>%
+  one_year_scatterplot(df = ., var_y = extra, var_x = current_year_admw_district, log_y_on = F, log_x_on = T,
+                       lab_x = "District Current-year ADMw",
+                       lab_y = "District Allocated ADMw (max of this or previous yeaar)")
+```
+
+What proportion of district ADM are categories that get exclusive funding?
+
+```{r}
+district_year_subgroup_enrollment <- district_year_adm %>%
+  distinct(school_year, district_id, district_name, district_iep_students) %>%
+  mutate(category = "IEP") %>%
+  rename("current_year_adm" = "district_iep_students") %>%
+  rbind(
+  district_year_adm %>%
+  filter(!grepl("IEP|School|Scholars", category)) %>%
+  group_by(school_year, category, district_id, district_name) %>%
+  summarize(current_year_adm = sum(current_year_adm))) %>%
+  rbind(hcd_year %>%
+          select(school_year, actual_hcd_count, dist_id) %>%
+          rename("district_id" = "dist_id",
+                 "current_year_adm" = "actual_hcd_count") %>%
+          mutate(category = "HCD")) %>%
+  mutate(category = gsub("Students in ", "", category)) %>%
+  group_by(school_year, district_id) %>%
+  mutate(
+    prop_current_year_adm = current_year_adm/current_year_adm[category == "ADMr"],
+    total = current_year_adm[category == "ADMr"]
+  )
+```
+
+
+```{r}
+district_year_subgroup_enrollment %>%
+  ungroup() %>%
+  group_by(school_year, category) %>%
+  summarize(total = sum(current_year_adm)) %>%
+  group_by(school_year) %>%
+  mutate(
+    percentage = round(total*100/total[category == "ADMr"],3)
+  ) %>%
+  filter(category != "ADMr") %>%
+  ggplot(data = ., aes(x = percentage,
+             y = fct_reorder(factor(category), percentage))) +
+  geom_col(fill = "cornflowerblue") +
+  geom_text(aes(label = round(percentage,1)), nudge_x = 2, size = 2, color = "gray30") +
+  facet_wrap(~school_year, ncol = 3) +
+  theme_minimal() +
+  theme(
+    axis.title = element_blank(),
+    axis.text.y = element_text(lineheight = 0.5),
+    axis.text.x = element_blank()
+  ) 
+```
+
+Proportion of subgroups by total enrollment
+
+```{r}
+categories <- unique(district_year_subgroup_enrollment$category)[-2]
+
+map(categories,
+    ~one_year_scatterplot(
+      year = 2019,
+      df = filter(district_year_subgroup_enrollment, category == .x),
+      var_x = total,
+      var_y = prop_current_year_adm,
+      log_y_on = F,
+      lab_x = .x))
+
+
+
+map(2011:2023, ~one_year_scatterplot(year = .x,
+                                     df = district_year_adm,
+                     var_x = district_iep_percent,
+                     var_y = district_iep_eff_weight,
+                     log_y_on = F,
+                     log_x_on = F))
+```
+
+
+
+```{r}
+
+```
+
+:::

@@ -244,3 +244,30 @@ hcd_year_df[[2]] <- hcd_year_df[[2]] %>%
 
 # write.csv(hcd_year_df[[1]], "dSata_clean/hcd_file_paths_metadata.csv")
 # write.csv(hcd_year_df[[2]], "data_clean/hcd_year_good.csv")
+
+# HCD summary data 2003-2022
+hcd_summary <- "data_raw/High Cost Disability/HCD State Level 2003-2004 through 2022-2023 (1).pdf"
+
+# read document into text
+hcd_summary_df <- pdf_text(hcd_summary) %>% # character for each page
+  # converts to rows per df
+  map2_dfr(., 1:length(.), ~ {
+    # break new lines into rows
+    text <- strsplit(.x, "\n")[[1]]
+    # Remove empty lines
+    text <- text[!str_detect(text, "^\\s*$")] 
+    # Remove extra spaces from beginning
+    text <- trimws(text)
+    
+    tibble(text = text)
+  })
+
+hcd_summary_df <- hcd_summary_df[4:nrow(hcd_summary_df),] %>%
+  pull(text) %>%
+  str_split(., pattern = "\\s{2,}", simplify = T) %>%
+  as.data.frame() %>%
+  mutate(across(everything(), parse_number)) %>%
+  rename_with(~c("school_year", "grant_amount", "threshold", "eligible_students",
+                "total_expenditre", "expenditure_above_threshold", "reported_rate", "calculated_rate"))
+
+write.csv(hcd_summary_df, "data_clean/hcd_state_2003_2022.csv")
