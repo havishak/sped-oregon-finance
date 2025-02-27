@@ -29,13 +29,13 @@ The repository contains code for cleaning, analyzing, and visualizing data for a
 
 3. District-level revenue data from 2019-2023
 
-- [ ] Read each file and toggle to sheet (usually 1) that has detailed listing.
-- [ ] Summarize by Fund Cd and Source Cd
+- [ X ] Read each file and toggle to sheet (usually 1) that has detailed listing.
+- [ X ] Summarize into local, state, and federal revenue sources.
 
 4. Reimbursements to districts from their High-cost disability grant
 
-- [ ] From year summary file, get grant aid and threshold
-- [ ] From actual payment file, get all variables (actual expenditure, predicted, and reconciliatory payment)
+- [ X ] From year summary file, get grant aid and threshold
+- [ X ] From actual payment file, get all variables (actual expenditure, predicted, and reconciliatory payment)
 
 5. Data from Other Sources
 

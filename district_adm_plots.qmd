@@ -3,20 +3,6 @@ title: "An Overview of Oregon's State Funding Allocation"
 format: closeread-html
 ---
 
-:::{.cr-section}
-
-This Project
-
-
-:::{#cr-myplot}
-```{r}
-hist(rnorm(15))
-```
-:::
-
-When this paragraph scrolls into view it will reveal a histogram. @cr-myplot
-
-
 The state of Oregon uses a student-based funding model to allocate revenues to its 197 school districts. In this article, I will describe trends in funding allocation from 2011 to 2024. 
 
 

@@ -1,0 +1,41 @@
+---
+title: My First Closeread
+format: closeread-html
+---
+
+Hello World! Please read my Closeread story below.
+
+:::{.cr-section}
+
+< add paragraphs, images, code cells, etc. >
+
+
+:::{#cr-myplot}
+```{r}
+hist(rnorm(15))
+```
+:::
+
+When this paragraph scrolls into view it will reveal a histogram. @cr-myplot
+
+:::{focus-on="cr-myplot"}
+This paragraph and the one that follows will appear as one narrative block
+
+When these paragraphs scroll into view, they will reveal a histogram.
+:::
+
+This is where we load the library. [@cr-dplyr]{highlight="1,2"}
+
+:::{#cr-dplyr}
+```{r echo = T, eval = F}
+library(dplyr)
+library(palmerpenguins)
+
+penguins |>
+  group_by(island) |>
+  summarize(avg_bill_length = mean(bill_length_mm))
+```
+:::
+
+:::
+

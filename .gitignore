@@ -52,3 +52,6 @@ rsconnect/
 data_raw/
 data_clean/
 
+# Quarto stuff
+/.quarto/
+/_site/

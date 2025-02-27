@@ -1,0 +1,214 @@
+---
+title: "Data Science Capstone"
+author: "Havisha Khurana"
+format: 
+  closeread-html:
+    layout: "overlay-left"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE,
+                      message = FALSE,
+                      error = FALSE)
+
+# load libraries
+# install.packages("devtools")
+#devtools::install_github("ivelasq/leaidr")
+library(tidyverse)
+library(knitr)
+#library(plotly)
+```
+
+
+**Project Overview**
+
+In Oregon, state and local revenues are pooled together and redistributed to school districts based on a funding formula. Approximately 60% of the total education budget comes from the state’s share, making it a critical revenue source for most districts. In this project, I analyzed revenue and expenditure data by school district over multiple years.
+
+To do: In the background, add OR district map
+
+**Coding Steps**
+
+
+
+:::{.cr-section}
+
+For this capstone project, I took up the following challenges: @cr-scrapepdf
+
+:::{focus-on="cr-scrapepdf"}
+
+1. Scrape PDFs with district revenue allocation receipts.
+
+
+2. Compiled 4 different sources of data.
+
+
+3. Used `quarto closeread` for this scrollytelling article.
+:::
+
+
+:::{#cr-scrapepdf}
+
+```{r}
+include_graphics("closeread_figures/pdf_scrape_eg.png")
+```
+
+:::
+
+:::
+
+
+
+**The Nuts and Bolts of Data-Scraping Process**
+
+In the first section, I take you through the process I followed for the data-scraping.
+
+
+
+:::{.cr-section}
+
+This function is used to read the pdf and break it into pieces that follow the same structure. [@cr-districtlist1]{scale-by="1.25"}
+
+As parameters, we need to pass the file path where the pdf is saved. [@cr-districtlist1]{highlight="1"}
+
+First, we read the pdf as a vector of all text on each page. Then, we split the vector by new-line-character so that each line becomes a row in the dataset. We also do some preliminary cleaning by removing white spaces from the text. [@cr-districtlist1]{highlight="3-14"}
+
+The next part flags where the location where each district entry starts and ends. [@cr-districtlist2]{highlight="4-13"}
+
+Then, I split each district related lines into a list. [@cr-districtlist2]{highlight="16-18"}
+
+:::{#cr-districtlist1}
+```{r echo=T, eval=F}
+scrape_pdf_data <- function(file_path) {
+
+  file_text_lines <- pdf_text(file_path) %>%
+    map2_dfr(., 1:length(.), ~ {
+      text <- strsplit(.x, "\n")[[1]]
+      text <- text[!grepl("^\\s*$", text)]
+      text <- gsub("^\\s\\s+", "", text)
+      text <- gsub("\\s+", " ", text)
+      text <- gsub("‐", "-", text)
+
+      page_df <- data.frame(text = text, page = .y)
+
+      return(page_df)
+    })
+
+  [...]
+
+```
+:::
+
+:::{#cr-districtlist2}
+```{r echo=T, eval=F}
+scrape_pdf_data <- function(file_path) {
+  [...]
+  
+  get_district_page <- file_text_lines %>%
+    mutate(district_id_found = as.integer(grepl("District ID:", text)))
+    select(page, district_id_found) %>%
+    distinct() %>%
+    filter(district_id_found == 1) %>%
+    mutate(district_index = row_number()) %>%
+    select(-district_id_found) %>%
+    full_join(tibble(page = 1:max(file_text_lines$page)), by = "page") %>%
+    arrange(page) %>%
+    fill(district_index, .direction = "down")
+
+  district_year_list <- file_text_lines %>%
+    left_join(get_district_page) %>%
+    split(., .$district_index)
+
+  return(district_year_list)
+}
+```
+:::
+
+
+The next function shows the steps to extract information from lines related to a district. @cr-districtinfo1
+
+The function parameters is a dataframe of all rows associated with a district. [@cr-districtinfo1]{highlight="1"}
+
+I classify each line based on how I want to treat it using string patterns. [@cr-districtinfo1]{highlight="4-10"}
+
+Then, I use a regular expression to get district information, including county location, district name and district id. [@cr-districtinfo1]{highlight="21"}
+
+Using a second regular expression, I extract information from each category-row. [@cr-districtinfo2]{highlight="9-12"}
+
+Then I put it in a dataframe format, and do some additional cleaning. [@cr-districtinfo2]{highlight="19"}
+
+::: {#cr-districtinfo1}
+```{r echo=T, eval=F}
+one_district_info <- function(district_df) {
+  district_df <- district_df %>%
+    mutate(
+      information_type = case_when(
+        grepl("District ID", text) ~ "district_info",
+        # adding as files from 2014 onwards have this in the entry name
+        grepl("for funding calculation|information only", text) ~ "entry_name",
+        grepl(":", text) ~ "category_info",
+        grepl("ADMw", text) ~ "total",
+        TRUE ~ "entry_name"
+      )
+    )  %>%
+    mutate(entry_index = cumsum(information_type == "entry_name"))
+  
+  # grab district level info
+  district_details <- district_df %>%
+    filter(information_type == "district_info") %>%
+    select(text) %>%
+    unlist() %>%
+    str_match(., "^(.*?),\\s*(.*?)\\s*District ID:\\s*(\\d+)$")
+   
+  [...]
+```
+:::
+
+::: {#cr-districtinfo2}
+```{r echo=T, eval=F}
+# grab each entry-level information
+one_district_info <- function(district_df) {
+  [...]
+  entry_category_information <- district_df %>%
+    filter(entry_index != 0) %>%
+    split(., .$entry_index) %>%
+    map_dfr(., ~ {
+      # pattern different for 2024, no = sign
+      category_pattern <-  "(.*):\\s*(-?[\\d,]+\\.\\d+)?\\s*X\\s*(-?[\\d.]+)
+      \\s*=?\\s*(-?[\\d,]+\\.\\d+)?\\s*(-?[\\d,]+\\.\\d+)?\\s*X\\s*(-?[\\d.]+)
+      \\s*=?\\s*(-?[\\d,]+\\.\\d+)?"
+      
+      
+      .x %>%
+        filter(information_type == "category_info") %>%
+        select(text) %>%
+        unlist() %>%
+        str_match(., category_pattern) %>%
+        as.data.frame() %>%
+        select(-V7) %>%
+        rename(
+          "org_text" = "V1",
+          "category" = "V2",
+          "current_year_adm" = "V3",
+          "category_weight" = "V4",
+          "current_year_admw" = "V5",
+          "past_year_adm" = "V6",
+          "past_year_admw" = "V8"
+        ) %>%
+        mutate(entry_name = unique(.x[.x$information_type == "entry_name", ]$text),
+               entry_index = unique(.x$entry_index))
+    }) %>%
+    mutate(
+      across(current_year_adm:past_year_admw, ~ gsub(",", "", .x)),
+      across(current_year_adm:past_year_admw, ~ ifelse(is.na(.x), 0, .x)),
+      across(current_year_adm:past_year_admw, as.numeric)
+    )
+  
+  return(entry_category_information)
+}
+```
+:::
+
+
+:::
+
+
