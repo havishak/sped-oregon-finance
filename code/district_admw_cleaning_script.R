@@ -168,16 +168,16 @@ one_district_info <- function(district_df) {
       district_name = district_details[3],
       district_id = district_details[4],
       school_year = unique(district_df$school_year),
-      current_year_adm_district = sum(current_year_adm[category == "ADMr"]),
-      current_year_admw_district = sum(current_year_admw),
-      past_year_adm_district = sum(past_year_adm[category == "ADMr"]),
-      past_year_admw_district = sum(past_year_admw)
+      current_year_adm_district = sum(current_year_adm[category == "ADMr"], na.rm = T),
+      current_year_admw_district = sum(current_year_admw, na.rm = T),
+      past_year_adm_district = sum(past_year_adm[category == "ADMr"], na.rm = T),
+      past_year_admw_district = sum(past_year_admw, na.rm = T)
     ) %>%
     group_by(entry_name) %>%
     mutate(
-      current_year_adm_entry = sum(current_year_adm[category == "ADMr"]),
+      current_year_adm_entry = sum(current_year_adm[category == "ADMr"], na.rm = T),
       current_year_admw_entry = sum(current_year_admw),
-      past_year_adm_entry = sum(past_year_adm[category == "ADMr"]),
+      past_year_adm_entry = sum(past_year_adm[category == "ADMr"], na.rm = T),
       past_year_admw_entry = sum(past_year_admw),
       current_year_effective_admw_entry = max(current_year_admw_entry, past_year_admw_entry),
       current_weight_entry = ifelse(
@@ -216,7 +216,7 @@ all_district_year_combine <- function(file_path) {
 }
 
 # call function and save clean_df
-# admw_district_df <- all_district_year_combine("data_raw/District Estimates ADMw Breakouts")
+admw_district_df <- all_district_year_combine("data_raw/District Estimates ADMw Breakouts")
 # write.csv(admw_district_df[[1]], "data_clean/district_admw_file_paths_metadata.csv")
 # write.csv(admw_district_df[[2]] %>% filter(!is.na(category)), "data_clean/district_year_admw.csv")
 

@@ -1,17 +1,46 @@
 ---
 title: "An Overview of Oregon's State Funding Allocation"
-format: closeread-html
+subtitle: "Subtitle"
+editor: visual
+author: "Havisha Khurana"
+date: "today"
+date-format: "full"
+format: 
+    html:
+        embed-resources: true
+        code-fold: true
+        code-link: true
+        theme: journal
+        highlight: tango
+        df-print: paged
+        self-contained-math: true
+        abstract: You can add an abstract here
+        abstract-title: Abstract Title
+        toc: true
+        toc_float: true
+        toc_location: "left"
+        toc_expand: true
+        code-overflow: wrap
+        code-line-numbers: true
+        code-copy: true
+        footnotes-hover: true
+        highlight-style: pygments
+execute:
+   warning: false
+   error: false
+   message: false
 ---
 
-The state of Oregon uses a student-based funding model to allocate revenues to its 197 school districts. In this article, I will describe trends in funding allocation from 2011 to 2024. 
-
+The state of Oregon uses a student-based funding model to allocate revenues to its 197 school districts. In this analysis, I will describe trends in its funding allocation from 2011 to 2024.
 
 ```{r}
 # load libraries
 library(tidyverse)
-library(plotly)
+library(gghighlight)
+library(geomtextpath)
+library(patchwork)
+library(modelsummary)
 ```
-
 
 ```{r}
 district_year_adm <- readr::read_csv(here::here("data_clean/district_year_admw.csv")) %>%
@@ -33,35 +62,15 @@ district_year_adm <- readr::read_csv(here::here("data_clean/district_year_admw.c
 
 hcd_year <-  readr::read_csv(here::here("data_clean/hcd_year_good.csv")) %>%
   select(-1)
+
+hcd_all_year <- readr::read_csv("data_clean/hcd_state_2003_2022.csv") %>%
+  select(-1)
+
+district_details <- district_year_adm %>%
+  distinct(school_year, district_id, district_name, current_year_adm_district)
 ```
 
 ```{r}
-year_dotplot <- function(df, var_y , var_x, log_on = T,
-                         lab_x = "", lab_y = "Year"){
-  
-  plot <- district_year_adm %>%
-  distinct(district_id, {{var_y}}, {{var_x}}, district_name) %>%
-  ggplot(aes(y = fct_rev(factor({{var_y}})), x = {{var_x}}, color = {{var_x}})) +
-  geom_jitter(show.legend = F, alpha = 0.4) +
-  geom_boxplot(outliers = F, fill = "transparent", show.legend = F)+
-  labs(
-    x = lab_x,
-    y = lab_y
-  ) +
-  theme_minimal() +
- scale_color_continuous(type = "viridis")
-  
-  if(log_on == TRUE){
-    plot <- plot +
-      scale_color_continuous(trans = "log10", type = "viridis")+
-      scale_x_continuous(trans = "log10",
-                     breaks = c(1, 10, 100, 1000, 10000))
-      
-  }
-
-  return(plot)
-}
-
 one_year_scatterplot <- function(df, year = 2011, 
                                  var_y, var_x, log_x_on = T, log_y_on = T,
                                 lab_x = "", lab_y = "") {
@@ -69,16 +78,16 @@ one_year_scatterplot <- function(df, year = 2011,
   plot <- df %>%
   filter(school_year == year) %>%
   distinct(school_year, {{var_x}}, {{var_y}}) %>%
+  mutate(across(-school_year), ~.x - mean(,x)) %>%
   ggplot(aes(x = {{var_x}}, y = {{var_y}})) +
+  geom_smooth()+
+  geom_vline(xintercept = 0) +
+  geom_xline(y_intercept = 0) +
   geom_point() +
   labs(
     x = lab_x,
     y = lab_y
-  ) +
-  theme_minimal()  +
-  theme(
-    panel.grid.minor = element_blank()
-  )
+  ) 
   
   if(log_x_on == TRUE){
     plot <- plot +
@@ -97,48 +106,68 @@ one_year_scatterplot <- function(df, year = 2011,
 }
 ```
 
-:::{.cr-section}
-
-:::{#cr-stateprop}
 ```{r}
-
-```
-:::
-
-
-District-ADM by school year
-
-```{r}
-year_dotplot(district_year_adm,
-             var_y = school_year,
-             var_x = current_year_adm_district,
-             log_on = T,
-             lab_x = "District Average Daily Membership (ADM)") 
+plots_theme <- function(ggplot_object){
+  ggplot_object <- ggplot_object +
+  theme_minimal()  +
+  theme(
+    panel.grid = element_blank(),
+    plot.background = element_rect(fill = "azure", color = "transparent")
+  ) +
+    guides(color = "none",
+           fill = "none")
+  
+  return(ggplot_object)
+}
 ```
 
-What proportion of District-ADM do districts get?
-
 ```{r}
-district_year_adm %>%
-  distinct(school_year, district_id, current_year_adm_district, current_year_admw_district) %>%
-  mutate(
-    adm_admw_ratio = current_year_admw_district/current_year_adm_district
-  ) %>%
-  one_year_scatterplot(df = ., var_y = adm_admw_ratio, var_x = current_year_adm_district, log_y_on = F,
-                       lab_x = "District ADM",
-                       lab_y = "Allocation rate per student") +
-  scale_y_continuous(limits = c(0,10),
-                     breaks = 0:10)
+cont_across_years(district_year_adm,
+             var_x = school_year,
+             var_y = current_year_adm_district,
+             log_on = F)+
+  gghighlight(max(current_year_adm_district) > 30000,
+              label_key = district_name,
+              unhighlighted_params = list(alpha = 0.3)) +
+  scale_color_brewer(palette = "Dark2") +
+  labs(title = "District Student Membership Across Years")
 
-district_year_adm %>%
-  distinct(school_year, district_id, current_year_admw_district, current_year_eff_admw_district) %>%
-  mutate(extra = current_year_eff_admw_district - current_year_admw_district) %>%
-  one_year_scatterplot(df = ., var_y = extra, var_x = current_year_admw_district, log_y_on = F, log_x_on = T,
-                       lab_x = "District Current-year ADMw",
-                       lab_y = "District Allocated ADMw (max of this or previous yeaar)")
+cont_across_years(district_year_adm,
+             var_x = school_year,
+             var_y = current_year_adm_district,
+             log_on = F)+
+  gghighlight(max(current_year_adm_district) > 13000 & max(current_year_adm_district) < 30000,
+              label_key = district_name,
+              unhighlighted_params = list(alpha = 0.3)) +
+  scale_color_brewer(palette = "Dark2") +
+  labs(title = "District Student Membership Across Years")
+
+cont_across_years(district_year_adm,
+             var_x = school_year,
+             var_y = current_year_adm_district,
+             log_on = T)+
+  gghighlight(max(current_year_adm_district) < 10,
+              label_key = district_name,
+              unhighlighted_params = list(alpha = 0.3)) +
+  scale_color_brewer(palette = "Dark2") +
+  labs(title = "Log District Student Membership Across Years")
 ```
 
-What proportion of district ADM are categories that get exclusive funding?
+
+<!-- ```{r} -->
+<!-- district_2024_adm_arrange <- district_year_adm %>% -->
+<!--   filter(school_year == "2024") %>% -->
+<!--   distinct(district_name, current_year_adm_district) %>% -->
+<!--   arrange(desc(current_year_adm_district)) %>% -->
+<!--   mutate(text = paste0(district_name,": ",round(current_year_adm_district))) -->
+<!-- ``` -->
+
+<!-- **District-ADM by school year**: District ADM exhibits similar distribution by academic year. In 2017, 2020 and 2021, there were districts with less than 1 student. The vast majority of districts have around 1000 students. The median number of students in a school district across years is close to 800 and the mean number of students in a school district across years is 2800. -->
+
+<!-- The 10 biggest school districts in 2024 in Oregon were: `r head(district_2024_adm_arrange, 10) %>% pull(text)`. -->
+
+<!-- The 10 smallest schools districts in 2024 in Oregon were: `r tail(district_2024_adm_arrange, 10) %>% pull(text)`. -->
+
 
 ```{r}
 district_year_subgroup_enrollment <- district_year_adm %>%
@@ -165,56 +194,205 @@ district_year_subgroup_enrollment <- district_year_adm %>%
 
 
 ```{r}
-district_year_subgroup_enrollment %>%
+state_year_subgroup_enrollment <- district_year_subgroup_enrollment %>%
   ungroup() %>%
   group_by(school_year, category) %>%
   summarize(total = sum(current_year_adm)) %>%
+  rbind(hcd_all_year %>%
+          filter(school_year >= 2011, school_year < 2018) %>%
+          select(school_year, eligible_students) %>%
+          rename("total" = "eligible_students") %>%
+          mutate(category = "HCD")) %>%
   group_by(school_year) %>%
   mutate(
     percentage = round(total*100/total[category == "ADMr"],3)
   ) %>%
-  filter(category != "ADMr") %>%
-  ggplot(data = ., aes(x = percentage,
-             y = fct_reorder(factor(category), percentage))) +
-  geom_col(fill = "cornflowerblue") +
-  geom_text(aes(label = round(percentage,1)), nudge_x = 2, size = 2, color = "gray30") +
-  facet_wrap(~school_year, ncol = 3) +
-  theme_minimal() +
-  theme(
-    axis.title = element_blank(),
-    axis.text.y = element_text(lineheight = 0.5),
-    axis.text.x = element_blank()
+  filter(category != "ADMr", !is.na(percentage))
+```
+```{r}
+ggplot(state_year_subgroup_enrollment, aes(x = school_year,
+               node = category,
+               fill = category,
+               value = percentage)) +
+  geom_sankey_bump(space = 0, type = "alluvial", color = "transparent", smooth = 6) +
+  scale_fill_viridis_d(option = "A", alpha = .8) +
+  theme_sankey_bump(base_size = 16) +
+  labs(x = NULL,
+       y = "Percentage",
+       fill = NULL,
+       color = NULL) +
+  theme(legend.position = "bottom") +
+  labs(title = "State-level subgroup representation")
+```
+
+```{r}
+categories <- unique(district_year_subgroup_enrollment$category)[c(1,3:5)]
+
+map(categories, ~cont_across_years_w_mean(df = filter(district_year_subgroup_enrollment, category == .x), var_x = school_year, var_y = prop_current_year_adm, log_on = F,
+                                          mean_numerator = current_year_adm,
+                                          mean_denominator = total) +
+      labs(title = .x))
+```
+
+Proportion of subgroups by total enrollment <Quantile of enrollment and quantile of proportion by a category> Two ways to represent
+
+```{r}
+one_year_scatterplot_w_bars(df = district_year_subgroup_enrollment %>%
+  filter(category == "ESL programs"),
+   var_y = prop_current_year_adm, 
+  var_x = total, log_x_on = T, log_y_on = F,
+                                  add_bars = T,
+                                 var_x_name = "District Membership", var_y_name = "Proportion of students in ESL programs"
+)
+
+```
+
+
+```{r}
+district_year_adm_summary <- district_year_adm %>%
+  distinct(school_year, district_id, current_year_adm_district, current_year_admw_district, current_year_eff_admw_district) %>%
+  mutate(
+    adm_admw_ratio = current_year_admw_district/current_year_adm_district,
+    eff_adm_admw_ratio = current_year_eff_admw_district/current_year_adm_district
   ) 
+
+one_year_scatterplot_w_bars(df =district_year_adm_summary,
+   var_y = current_year_admw_district, 
+  var_x = current_year_adm_district, log_x_on = T, log_y_on = T,
+                                  add_bars = F,
+                                 var_x_name = "District Membership", var_y_name = "Proportion of students in ESL programs"
+)
+
+# library(lme4)
+# 
+# lmer(current_year_adm_district ~ 1 | district_id,
+#      data = district_year_adm_summary)
+#99.7% variance in the ADM is explained by the between-districts difference.
+# The enrollment remains pretty stable between districts across time.
 ```
 
-Proportion of subgroups by total enrollment
+**What proportion of District-ADM do districts get?** The allocation rate (ADM-Weighted/ADM) per student has an exponential decay shape: Small districts (with less than 100 students) get between 2 to 9 times the allocation per student. Districts between 100 to 1000 students get between 1 to 2 times the allocation per student. The relationship is close to the 1 line for schools with higher than 1000 students. The median allocation ratio is `r median(district_year_adm_ratio$adm_admw_ratio)`. About 20% of the variation in the allocation ratio is explained at the between-district levels.
+
+**How much do schools really get?** Since Oregon has a safeguard rule where the districts get max of their previous or current year weighted ADM, most school districts get funds allocated more than their resident schools in a given year. In the whole sample, only \<\> proportion of the times did districts get funds based on their current year ADM.
+
+**What proportion of district ADM are categories that get exclusive funding?** **And variation that is explained by between district factors?**
+
+Next set of plots:
+
+-   Trends in Revenue: money from state, local, and federal sources - and variation.
 
 ```{r}
-categories <- unique(district_year_subgroup_enrollment$category)[-2]
+revenue <- readr::read_csv("data_clean/district_revenue_sources_2019_2022.csv") %>%
+  select(-1) %>%
+  left_join(district_details)
 
-map(categories,
-    ~one_year_scatterplot(
-      year = 2019,
-      df = filter(district_year_subgroup_enrollment, category == .x),
-      var_x = total,
-      var_y = prop_current_year_adm,
-      log_y_on = F,
-      lab_x = .x))
+# dot-plot
+revenue %>%
+  filter(source == "federal") %>%
+  mutate(ppe = revenue_dollar/current_year_adm_district) %>%
+  cont_across_years_w_mean(df = ., var_y = ppe, var_x = school_year, log_on = T, mean_type = 2, mean_numerator = "", mean_denominator = "", add_dollar = T) 
 
+cont_across_years_w_mean(df = revenue, var_y = ppe, var_x = school_year, log_on = T, mean_type = 2, mean_numerator = "", mean_denominator = "", add_dollar = T) 
+ 
+revenue %>%
+    distinct(school_year, district_id, district_name, ppe) %>%
+    ggplot(aes(x = school_year, y = ppe)) +
+    geom_line(aes(group = district_name), color = "gray80", alpha = 0.3) +
+    #scale_y_log10()+
+    # geom_smooth(se = F)+
+    # scale_y_log10(
+    #   breaks = c(1,10,100,1000, 10000, 50000)
+    # ) +
+    theme_minimal()+
+    theme(
+      panel.grid = element_blank(),
+      axis.ticks = element_line()
+    ) +
+    guides(color = "none") +
 
+# facet-plot,
+ggplot(revenue, aes(y = per_revenue, x = source, color = source)) +
+  geom_jitter(alpha = 0.5) +
+  facet_wrap(~school_year) +
+  scale_y_continuous(limits = c(0,1))
 
-map(2011:2023, ~one_year_scatterplot(year = .x,
-                                     df = district_year_adm,
-                     var_x = district_iep_percent,
-                     var_y = district_iep_eff_weight,
-                     log_y_on = F,
-                     log_x_on = F))
+revenue %>%
+  #filter(source != "other") %>%
+  group_by(school_year, source) %>%
+  summarize(state_total = sum(revenue_dollar)) %>%
+  mutate(prop = state_total/sum(state_total)) %>%
+  ggplot(aes(y = factor(school_year), x = prop, fill = source)) +
+  geom_col()
+
+lmer(total_revenue ~ 1 | district_id,
+     distinct(revenue, school_year, district_id, total_revenue))
+
+lmer(per_revenue ~ 1 | district_id,
+     distinct(filter(revenue, source == "intermediate"), school_year, district_id, per_revenue))
+
+# most variation in revenue is explained at the between district levels, like 98% - local and state more stable. federal, other, intermediate more variable.
+```
+
+-   Trends in aggregated expenditure by categories defined in the dataset - and variation
+
+```{r}
+#df ready
+```
+
+Main interest: funding for and expenditure on two groups: SpEd and EL
+
+-   funding: HCD
+
+```{r}
+ggplot(hcd_all_year,
+       aes(y = factor(school_year),
+           x = threshold)) +
+  geom_col()
+
+ggplot(hcd_all_year,
+       aes(y = factor(school_year),
+           x = grant_amount)) +
+  geom_col()
+
+ggplot(hcd_all_year,
+       aes(y = factor(school_year),
+           x = eligible_students)) +
+  geom_col() #percent of total, already shown. between 0.5 to 1% from 2011 to 2022
+
+ggplot(hcd_all_year,
+       aes(y = factor(school_year),
+           x = total_expenditre)) +
+  geom_col()
+
+# total expenditure per student
+ggplot(hcd_all_year,
+       aes(y = factor(school_year),
+           x = total_expenditre/eligible_students)) +
+  geom_col()
+
+# total expenditure per student
+ggplot(hcd_all_year,
+       aes(y = factor(school_year),
+           x = expenditure_above_threshold/eligible_students)) +
+  geom_col()
+
+#
+ggplot(hcd_all_year,
+       aes(y = factor(school_year),
+           x = calculated_rate)) +
+  geom_col()
 ```
 
 
+-   prop of iep adm that's from 11% and that's on top
 
 ```{r}
 
 ```
 
-:::
+
+-   what proportion of oregon students get funding through the double funding route?
+
+-   Expenditure: Use same criteria to make the aggregated categories but separate for flagged and not, and
+
+-   Evaluate discontinuity
