@@ -94,7 +94,7 @@ cont_across_years_w_mean(district_year_adm,
              lab_y = "Log of Student Membership")
 ```
 
-### Trends in Enrollment Across Years with Districts > 30k enrollment Highlighted
+### Trends in Enrollment Across Years with Districts \> 30k enrollment Highlighted
 
 ```{r}
 cont_across_years(district_year_adm,
@@ -122,7 +122,7 @@ cont_across_years(district_year_adm,
   scale_color_brewer(palette = "Dark2")
 ```
 
-### Trends in Enrollment Across Years with Districts <10 students Highlighted
+### Trends in Enrollment Across Years with Districts \<10 students Highlighted
 
 ```{r}
 cont_across_years(district_year_adm,
@@ -136,7 +136,7 @@ cont_across_years(district_year_adm,
   scale_color_brewer(palette = "Dark2")
 ```
 
-### Trends in State - Subgroup Enrollment 
+### Trends in State - Subgroup Enrollment
 
 ```{r}
 district_year_subgroup_enrollment <- district_year_adm %>%
@@ -223,7 +223,6 @@ map(categories, ~cont_across_years_w_mean(df = filter(district_year_subgroup_enr
       labs(title = .x))
 ```
 
-
 ### Trends in District - Subgroup Enrollment by Total Enrollment For One-Year
 
 ```{r}
@@ -298,7 +297,6 @@ one_year_scatterplot_w_bars(df = district_year_adm_summary,
 
 ## Revenue Data
 
-
 ```{r}
 revenue <- readr::read_csv("data_clean/district_revenue_sources_2019_2022.csv") %>%
   select(-1) %>%
@@ -322,7 +320,6 @@ revenue %>%
        y = "Total Revenue") +
   theme_minimal()
 ```
-
 
 ```{r}
 # state-revenue trends
@@ -356,7 +353,6 @@ revenue %>%
   )
 ```
 
-
 ```{r}
 # without other
 revenue %>%
@@ -389,6 +385,7 @@ revenue %>%
     legend.position = "top"
   )
 ```
+
 ### Trends in Per-pupil revenue by Districts based on sources
 
 ```{r}
@@ -410,7 +407,6 @@ Describe: Other includes balance in the state account.
 
 ### Trends in Revenue by District Enrollment
 
-
 ```{r}
 map(revenue_sources, ~one_year_scatterplot_w_bars(df = filter(revenue, source == .x) %>%
                                                  mutate(ppe = revenue_dollar/current_year_adm_district), 
@@ -423,9 +419,7 @@ map(revenue_sources, ~one_year_scatterplot_w_bars(df = filter(revenue, source ==
                                   add_bars = T))
 ```
 
-
 ## HCD Population
-
 
 ### Students eligible for HCD and Grant Amount
 
@@ -445,6 +439,7 @@ hcd_grant <- hcd_bar_plot(df = mutate(hcd_all_year, grant_amount_text = gsub("0{
 
 hcd_eligible + hcd_grant
 ```
+
 ### Students eligible for HCD and Per-pupil expenditure above threshold
 
 ```{r}
@@ -459,7 +454,6 @@ hcd_eligible + expense_per_student
 
 ### Per-pupil reimbursment and Per-pupil expenditure above threshold
 
-
 ```{r}
 reimbusement_per_student <- hcd_bar_plot(df = mutate(hcd_all_year, ppe = expenditure_above_threshold*calculated_rate/eligible_students),
              var_x = ppe,
@@ -469,7 +463,6 @@ reimbusement_per_student <- hcd_bar_plot(df = mutate(hcd_all_year, ppe = expendi
 
 reimbusement_per_student + expense_per_student
 ```
-
 
 ```{r}
 #| eval: false
@@ -490,5 +483,3 @@ reimbusement_per_student + expense_per_student
 # 
 # -   Evaluate discontinuity
 ```
-
-

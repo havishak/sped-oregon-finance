@@ -1,0 +1,19 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "An overview of Special Education Funding Data"
+  navbar:
+    left:
+      - href: district_adm_plots.qmd
+        text: Home
+
+format:
+  html:
+    theme: journal
+    css: styles.css
+    toc: true
+
+editor: visual
+
