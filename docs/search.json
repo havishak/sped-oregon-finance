@@ -47,5 +47,12 @@
     "title": "Run-Through Example",
     "section": "",
     "text": "One of the data sources I worked on for the project were public documentation from the Oregon Department of Education (ODE) that detailed state funds allocation to school districts by student types. This document came in the form of structured .pdfs. The primary ‘Data Sciency’ task I undertook during the capstone was to scrape 14 pdfs of 233 pages each.\n\nIn this section, I explain the logic of the text-scraping code. All these functions are found in the code/ folder. \nLet’s start by look at one pdf page.\n\n\n\n\n\n\nLet’s walk-through the steps using an example.\n\n\n\n\n\nFrom the pdf, I get to a dataframe of each line.\n\n\n\n\nThen, I create a list of 197 dataframes corresponding to informaion associated with each Oregon school district.\n\n\n\n\nI classify each line leveraging the structure.\n\n\n\n\nUsing the line classified as district_info, I grabbed the district details.\n\n\n\n\nThe resulting dataframe for one school district after applying the regular expressions rules.\n\n\n\n\n\n\n\n\n\n  \n\n\n\n\n\n\n\n\n  \n\n\n\n\n\n\n\n\n  \n\n\n\n\n\n\n\n     [,1]                                          [,2]           [,3]         \n[1,] \"Baker County, Baker SD 5J District ID: 1894\" \"Baker County\" \"Baker SD 5J\"\n     [,4]  \n[1,] \"1894\"\n\n\n\n\n\n\n\n  \n\n\n\n\n\n\n\n\nAnd then repeating it over across all districts, and all years."
+  },
+  {
+    "objectID": "try.html",
+    "href": "try.html",
+    "title": "Make it work",
+    "section": "",
+    "text": "It starts.\n\n\n\n\nThis is where we load the library.\n\n\n\n\n\n\n\nlibrary(dplyr)\nlibrary(palmerpenguins)\n\npenguins |&gt;\n  group_by(island) |&gt;\n  summarize(avg_bill_length = mean(bill_length_mm))\n\n# A tibble: 3 × 2\n  island    avg_bill_length\n  &lt;fct&gt;               &lt;dbl&gt;\n1 Biscoe               NA  \n2 Dream                44.2\n3 Torgersen            NA"
   }
 ]

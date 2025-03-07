@@ -64,15 +64,15 @@ scrape_pdf_data <- function(file_path) {
 
 The first step is the read the pdf as a dataframe. @cr-readpdf
 
-As parameter, I pass the relative file path where the pdf is saved. @cr-readpdf{highlight="1"}
+As parameter, I pass the relative file path where the pdf is saved. [@cr-readpdf]{highlight="1"}
 
-I use the **pdf_text()** function from the *pdftools* package which converts each pdf page into an object of type string. @cr-readpdf{highlight="3"}
+I use the **pdf_text()** function from the *pdftools* package which converts each pdf page into an object of type string. [@cr-readpdf]{highlight="3"}
 
-Then, I apply a series of cleaning process across each page-character object using the **map2_dfr()** function from the *purr* package. @cr-readpdf{highlight="4"}
+Then, I apply a series of cleaning process across each page-character object using the **map2_dfr()** function from the *purr* package. [@cr-readpdf]{highlight="4"}
 
-The cleaning steps include breaking the string into different lines separating at **next line** delimiter, removing white spaces, and multiple spaces in each line, and changing the hyphen symbol. @cr-readpdf{highlight="5-9"}
+The cleaning steps include breaking the string into different lines separating at **next line** delimiter, removing white spaces, and multiple spaces in each line, and changing the hyphen symbol. [@cr-readpdf]{highlight="5-9"}
 
-Now each line of each page is a different character object. I collapse all of them into a single dataframe. @cr-readpdf{highlight="11"}
+Now each line of each page is a different character object. I collapse all of them into a single dataframe. [@cr-readpdf]{highlight="11"}
 
 ::: {#cr-flaglines}
 ```{r}
@@ -103,7 +103,7 @@ scrape_pdf_data <- function(file_path) {
 
 In the next function, I find lines corresponding to district enteries so that I can leverage the structure. @cr-flaglines
 
-Then, I split the dataframe by district, so that each district has all its lines in a separate object. @cr-flaglines{highlight="15-17"}
+Then, I split the dataframe by district, so that each district has all its lines in a separate object. [@cr-flaglines]{highlight="15-17"}
 
 ::: {#cr-regularexpression}
 ```{r}
@@ -136,11 +136,11 @@ one_district_info <- function(district_df) {
 
 This function shows the steps to extract information from lines related to a single district. @cr-regularexpression
 
-The function parameters is a district-specific dataframe, created above. @cr-regularexpression{highlight="1"}
+The function parameters is a district-specific dataframe, created above. [@cr-regularexpression]{highlight="1"}
 
-I classify all the lines in accordance with the structure. @cr-regularexpression{highlight="4-11"}
+I classify all the lines in accordance with the structure. [@cr-regularexpression]{highlight="4-11"}
 
-Then, I use regular expressions to extract key details based on *information_type* @cr-regularexpression{highlight="17,20"}
+Then, I use regular expressions to extract key details based on *information_type* [@cr-regularexpression]{highlight="17,20"}
 
 ::: {#cr-regularexpression2}
 ```{r}
@@ -183,11 +183,11 @@ one_district_info <- function(district_df) {
 ```
 :::
 
-Another instance where I used a regular expressions to extract key details @cr-regularexpression2{highlight="9-11"}
+Another instance where I used a regular expressions to extract key details [@cr-regularexpression2]{highlight="9-11"}
 
-Lastly, I organize this information as a dataframe. @cr-regularexpression2{highlight="7"}
+Lastly, I organize this information as a dataframe. [@cr-regularexpression2]{highlight="7"}
 
-Lastly, I organize this information as a dataframe. @cr-regularexpression2{highlight="19-29"}
+Lastly, I organize this information as a dataframe. [@cr-regularexpression2]{highlight="19-29"}
 :::::::
 
 <br>

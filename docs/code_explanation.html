@@ -6466,7 +6466,7 @@ display: none;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">Thursday, March 6, 2025</p>
+      <p class="date">Friday, March 7, 2025</p>
     </div>
   </div>
   
@@ -6496,27 +6496,27 @@ display: none;
 <p>The first step is the read the pdf as a dataframe.</p>
 </div>
 </div>
-<div class="trigger new-trigger" data-focus-on="cr-readpdf">
+<div class="trigger new-trigger" data-focus-on="cr-readpdf" data-highlight="1">
 <div class="narrative">
 <p>As parameter, I pass the relative file path where the pdf is saved.</p>
 </div>
 </div>
-<div class="trigger new-trigger" data-focus-on="cr-readpdf">
+<div class="trigger new-trigger" data-focus-on="cr-readpdf" data-highlight="3">
 <div class="narrative">
 <p>I use the <strong>pdf_text()</strong> function from the <em>pdftools</em> package which converts each pdf page into an object of type string.</p>
 </div>
 </div>
-<div class="trigger new-trigger" data-focus-on="cr-readpdf">
+<div class="trigger new-trigger" data-focus-on="cr-readpdf" data-highlight="4">
 <div class="narrative">
 <p>Then, I apply a series of cleaning process across each page-character object using the <strong>map2_dfr()</strong> function from the <em>purr</em> package.</p>
 </div>
 </div>
-<div class="trigger new-trigger" data-focus-on="cr-readpdf">
+<div class="trigger new-trigger" data-focus-on="cr-readpdf" data-highlight="5-9">
 <div class="narrative">
 <p>The cleaning steps include breaking the string into different lines separating at <strong>next line</strong> delimiter, removing white spaces, and multiple spaces in each line, and changing the hyphen symbol.</p>
 </div>
 </div>
-<div class="trigger new-trigger" data-focus-on="cr-readpdf">
+<div class="trigger new-trigger" data-focus-on="cr-readpdf" data-highlight="11">
 <div class="narrative">
 <p>Now each line of each page is a different character object. I collapse all of them into a single dataframe.</p>
 </div>
@@ -6526,7 +6526,7 @@ display: none;
 <p>In the next function, I find lines corresponding to district enteries so that I can leverage the structure.</p>
 </div>
 </div>
-<div class="trigger new-trigger" data-focus-on="cr-flaglines">
+<div class="trigger new-trigger" data-focus-on="cr-flaglines" data-highlight="15-17">
 <div class="narrative">
 <p>Then, I split the dataframe by district, so that each district has all its lines in a separate object.</p>
 </div>
@@ -6536,32 +6536,32 @@ display: none;
 <p>This function shows the steps to extract information from lines related to a single district.</p>
 </div>
 </div>
-<div class="trigger new-trigger" data-focus-on="cr-regularexpression">
+<div class="trigger new-trigger" data-focus-on="cr-regularexpression" data-highlight="1">
 <div class="narrative">
 <p>The function parameters is a district-specific dataframe, created above.</p>
 </div>
 </div>
-<div class="trigger new-trigger" data-focus-on="cr-regularexpression">
+<div class="trigger new-trigger" data-focus-on="cr-regularexpression" data-highlight="4-11">
 <div class="narrative">
 <p>I classify all the lines in accordance with the structure.</p>
 </div>
 </div>
-<div class="trigger new-trigger" data-focus-on="cr-regularexpression">
+<div class="trigger new-trigger" data-focus-on="cr-regularexpression" data-highlight="17,20">
 <div class="narrative">
 <p>Then, I use regular expressions to extract key details based on <em>information_type</em></p>
 </div>
 </div>
-<div class="trigger new-trigger" data-focus-on="cr-regularexpression2">
+<div class="trigger new-trigger" data-focus-on="cr-regularexpression2" data-highlight="9-11">
 <div class="narrative">
 <p>Another instance where I used a regular expressions to extract key details</p>
 </div>
 </div>
-<div class="trigger new-trigger" data-focus-on="cr-regularexpression2">
+<div class="trigger new-trigger" data-focus-on="cr-regularexpression2" data-highlight="7">
 <div class="narrative">
 <p>Lastly, I organize this information as a dataframe.</p>
 </div>
 </div>
-<div class="trigger new-trigger" data-focus-on="cr-regularexpression2">
+<div class="trigger new-trigger" data-focus-on="cr-regularexpression2" data-highlight="19-29">
 <div class="narrative">
 <p>Lastly, I organize this information as a dataframe.</p>
 </div>
