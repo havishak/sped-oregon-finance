@@ -1,0 +1,17 @@
+{
+  "hash": "7dacfde503a8ad24429a306f3b8e7f1c",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: Closeread first attempt\nformat: \n  closeread-html:\n     embed-resources: true\nexecute:\n   warning: false\n   error: false\n   message: false\n---\n\n\n\n\n<br>\n\nOne of the data sources I worked on for the project were public documentation from the Oregon Department of Education (ODE) that detailed state funds allocation to school districts by student types. This document came in the form of structured .pdfs. The primary 'Data Sciency' task I undertook during the capstone was to scrape 14 pdfs of 233 pages each.\n\n<br>\n\nIn this section, I explain the logic of the text-scraping code. All these functions are found in the **code/** folder. <br><br>\n\nLet's start by look at one pdf page.\n\n![](closeread_figures/pdf_scrape_eg.png){fig-align=\"center\" width=\"800\"}\n\n<br>\n\n:::::: cr-section\n\\< add paragraphs, images, code cells, etc. \\>\n\n::: {#cr-myplot}\n\n\n\n::: {.cell}\n::: {.cell-output-display}\n![](closeread_tru_files/figure-html/unnamed-chunk-1-1.png){width=672}\n:::\n:::\n\n\n\n:::\n\nWhen this paragraph scrolls into view it will reveal a histogram. @cr-myplot\n\n::: {focus-on=\"cr-myplot\"}\nThis paragraph and the one that follows will appear as one narrative block\n\nWhen these paragraphs scroll into view, they will reveal a histogram.\n:::\n\nThis is where we load the library. @cr-dplyr\n\n::: {#cr-dplyr}\n\n\n\n::: {.cell}\n\n```{.r .cell-code}\nlibrary(dplyr)\nlibrary(palmerpenguins)\n\npenguins |>\n  group_by(island) |>\n  summarize(avg_bill_length = mean(bill_length_mm))\n```\n:::\n\n\n\n:::\n::::::\n",
+    "supporting": [
+      "closeread_tru_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
