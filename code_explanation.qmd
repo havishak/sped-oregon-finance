@@ -31,7 +31,7 @@ One of the data sources I worked on for the project were public documentation fr
 
 In this section, I explain the logic of the text-scraping code. All these functions are found in the **code/** folder. <br>
 
-Let's start by look at one pdf page.
+Let's start by looking at one pdf page.
 
 ![](closeread_figures/pdf_scrape_eg.png){fig-align="center" width="800"}
 

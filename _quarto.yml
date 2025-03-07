@@ -11,7 +11,7 @@ website:
       - href: code_explanation.qmd
         text: Scraping Code
       - href: code_explanation2.qmd
-        text: Example run-through
+        text: Scraping Example
     right:
       - icon: github
         href: https://github.com/havishak/sped-oregon-finance

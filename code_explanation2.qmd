@@ -27,17 +27,16 @@ execute:
 
 One of the data sources I worked on for the project were public documentation from the Oregon Department of Education (ODE) that detailed state funds allocation to school districts by student types. This document came in the form of structured .pdfs. The primary 'Data Sciency' task I undertook during the capstone was to scrape 14 pdfs of 233 pages each.
 
-<br>
+<br> 
+In this section, I will walkthrough an example of scraping data for one district. All these functions are found in the **code/** folder. <br>
 
-In this section, I explain the logic of the text-scraping code. All these functions are found in the **code/** folder. <br>
-
-Let's start by look at one pdf page.
+Let's start by looking at one pdf page.
 
 ![](closeread_figures/pdf_scrape_eg.png){fig-align="center" width="800"}
 
 <br>
 
-Let's walk-through the steps using an example.
+Let's see the intermediate steps for transforming the data.
 
 <br><br>
 
@@ -123,7 +122,7 @@ From the pdf, I get to a dataframe of each line. @cr-examplestep1
     left_join(get_district_page) %>%
     split(., .$district_index)
 
-district_year_list[[2]]
+district_year_list[[1]]
 ```
 :::
 
