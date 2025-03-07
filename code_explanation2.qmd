@@ -1,0 +1,263 @@
+---
+title: Run-Through Example
+author: "Havisha Khurana"
+date: "today"
+date-format: "full"
+editor_options: 
+  chunk_output_type: console
+format: 
+  closeread-html:
+     embed-resources: true
+     theme: journal
+     highlight: tango
+     df-print: paged
+     self-contained-math: true
+     code-overflow: wrap
+     code-line-numbers: true
+     code-copy: true
+     highlight-style: pygments
+execute:
+   warning: false
+   error: false
+   message: false
+   echo: false
+---
+
+<br>
+
+One of the data sources I worked on for the project were public documentation from the Oregon Department of Education (ODE) that detailed state funds allocation to school districts by student types. This document came in the form of structured .pdfs. The primary 'Data Sciency' task I undertook during the capstone was to scrape 14 pdfs of 233 pages each.
+
+<br>
+
+In this section, I explain the logic of the text-scraping code. All these functions are found in the **code/** folder. <br>
+
+Let's start by look at one pdf page.
+
+![](closeread_figures/pdf_scrape_eg.png){fig-align="center" width="800"}
+
+<br>
+
+Let's walk-through the steps using an example.
+
+<br><br>
+
+:::::::: cr-section
+::: {#cr-examplestep1}
+```{r echo=FALSE, eval=TRUE}
+library(tidyverse)
+library(pdftools)
+
+# read most updated file from year folders when there are year folders
+file_to_read <- function(directory_path) {
+  # get list of directories inside
+  dir_list <- list.dirs(directory_path)
+  
+  # remove the path we provided as it's added by default
+  dir_list <- setdiff(dir_list, directory_path)
+  
+  # list files in each directory and extract the dates
+  file_list <- map_dfr(dir_list,
+                       ~ tibble(
+                         files = list.files(.x),
+                         dir = .x,
+                         dates = mdy(gsub(".*?(\\d+-\\d+-\\d+).*", "\\1", files)),
+                         is_max = ifelse(dates == max(dates), 1, 0)
+                       )) %>%
+    filter(is_max == 1) %>%
+    mutate(file_path = paste0(dir, "/", files))
+  
+  return(file_list)
+}
+
+files <- file_to_read("data_raw/District Estimates ADMw Breakouts")
+
+file_path <- files$file_path[1]
+  
+ get_year <- str_extract(file_path, "\\d{2}-\\d{2}")
+ format_year <- str_replace(get_year, "(\\d{2})-(\\d{2})", "20\\1")
+  
+  # each line of pdf is a row
+  file_text_lines <- pdf_text(file_path) %>% # character for each page
+    # converts to rows per df
+    map2_dfr(., 1:length(.), ~ {
+      text <- strsplit(.x, "\n")[[1]]
+      # remove empty lines
+      text <- text[!grepl("^\\s*$", text)]
+      # remove trailing spaces
+      text <- gsub("^\\s\\s+", "", text)
+      # remove multiple spaces in between
+      text <- gsub("\\s+", " ", text)
+      
+      # there are a few negatives with a symbol other than minus
+      text <- gsub("‐", "-", text)
+      # convert to df
+      page_df <- tibble(text = text, page = .y)
+      
+      return(page_df)
+    }) %>%
+    mutate(district_id_found = as.integer(grepl("District ID:", text)))
+  
+file_text_lines
+  # now, split the data into individual district
+```
+:::
+
+From the pdf, I get to a dataframe of each line. @cr-examplestep1
+
+::: {#cr-examplestep2}
+```{r echo=FALSE, eval=TRUE}
+# see which pages cover each district
+  get_district_page <- file_text_lines %>%
+    select(page, district_id_found) %>%
+    distinct() %>%
+    filter(district_id_found == 1) %>%
+    mutate(district_index = row_number()) %>%
+    select(-district_id_found) %>%
+    full_join(tibble(page = 1:max(file_text_lines$page)), by = "page") %>%
+    arrange(page) %>%
+    fill(district_index, .direction = "down") 
+  
+  # split
+  
+  district_year_list <- file_text_lines %>%
+    left_join(get_district_page) %>%
+    split(., .$district_index)
+
+district_year_list[[2]]
+```
+:::
+
+Then, I create a list of `r length(district_year_list)` dataframes corresponding to informaion associated with each Oregon school district. @cr-examplestep2
+
+::: {#cr-examplestep3}
+```{r echo=FALSE, eval=TRUE}
+# remove rows with reduntant information from all dfs
+  ## Template
+  ## Ignore: Starting with State, As, Page, school_year if length < 20
+district_text <- district_year_list[[1]] %>%
+      mutate(
+        text_length = nchar(text),
+        remove_text = ifelse(grepl(paste0("^", format_year), text) &
+                               text_length < 25, 1, 0)
+      ) %>%
+      filter(
+        !grepl("^STATE|As of|^Page", text),
+        remove_text == 0
+      ) %>%
+      select(text, page)%>%
+    mutate(
+      information_type = case_when(
+        grepl("District ID", text) ~ "district_info",
+        # adding as files from 2014 onwards have this in the entry name
+        grepl("for funding calculation|information only", text) ~ "entry_name",
+        grepl(":", text) ~ "category_info",
+        grepl("ADMw", text) ~ "total",
+        TRUE ~ "entry_name"
+      )
+    )  %>%
+    mutate(entry_index = cumsum(information_type == "entry_name"))
+
+district_text
+```
+:::
+
+I classify each line leveraging the structure. @cr-examplestep3
+
+::: {#cr-examplestep4}
+```{r echo=FALSE, eval=TRUE}
+# grab district level info
+  district_details <- district_text %>%
+    filter(information_type == "district_info") %>%
+    select(text) %>%
+    unlist() %>%
+    str_match(., "^(.*?),\\s*(.*?)\\s*District ID:\\s*(\\d+)$")
+  
+district_details
+```
+:::
+
+Using the line classified as **district_info**, I grabbed the district details. @cr-examplestep4
+
+::: {#cr-examplestep5}
+```{r echo=FALSE, eval=TRUE}
+# grab each entry-level information
+  entry_category_information <- district_text %>%
+    filter(entry_index != 0) %>%
+    split(., .$entry_index) %>%
+    map_dfr(., ~ {
+      # pattern different for 2024, no = sign
+      category_pattern <-  "(.*):\\s*(-?[\\d,]+\\.\\d+)?\\s*X\\s*(-?[\\d.]+)\\s*=?\\s*(-?[\\d,]+\\.\\d+)?\\s*(-?[\\d,]+\\.\\d+)?\\s*X\\s*(-?[\\d.]+)\\s*=?\\s*(-?[\\d,]+\\.\\d+)?"
+      
+      
+      .x %>%
+        filter(information_type == "category_info") %>%
+        select(text) %>%
+        unlist() %>%
+        str_match(., category_pattern) %>%
+        as.data.frame() %>%
+        select(-V7) %>%
+        rename(
+          "org_text" = "V1",
+          "category" = "V2",
+          "current_year_adm" = "V3",
+          "category_weight" = "V4",
+          "current_year_admw" = "V5",
+          "past_year_adm" = "V6",
+          "past_year_admw" = "V8"
+        ) %>%
+        mutate(entry_name = unique(.x[.x$information_type == "entry_name", ]$text),
+               entry_index = unique(.x$entry_index))
+    }) %>%
+    mutate(
+      across(current_year_adm:past_year_admw, ~ gsub(",", "", .x)),
+      across(current_year_adm:past_year_admw, ~ ifelse(is.na(.x), 0, .x)),
+      across(current_year_adm:past_year_admw, as.numeric)
+    )
+  
+  
+  
+  # compile a district_level_df
+  
+  district_level_df <- entry_category_information %>%
+    mutate(
+      district_geo = district_details[2],
+      district_name = district_details[3],
+      district_id = district_details[4],
+      #school_year = unique(district_df$school_year),
+      current_year_adm_district = sum(current_year_adm[category == "ADMr"], na.rm = T),
+      current_year_admw_district = sum(current_year_admw, na.rm = T),
+      past_year_adm_district = sum(past_year_adm[category == "ADMr"], na.rm = T),
+      past_year_admw_district = sum(past_year_admw, na.rm = T)
+    ) %>%
+    group_by(entry_name) %>%
+    mutate(
+      current_year_adm_entry = sum(current_year_adm[category == "ADMr"], na.rm = T),
+      current_year_admw_entry = sum(current_year_admw),
+      past_year_adm_entry = sum(past_year_adm[category == "ADMr"], na.rm = T),
+      past_year_admw_entry = sum(past_year_admw),
+      current_year_effective_admw_entry = max(current_year_admw_entry, past_year_admw_entry),
+      current_weight_entry = ifelse(
+        current_year_effective_admw_entry == current_year_adm_entry,
+        1,
+        0
+      )
+    ) %>%
+    ungroup() %>%
+    mutate(
+      current_year_eff_admw_district = sum(unique(current_year_effective_admw_entry)),
+      current_year_extra_weight_district = current_year_eff_admw_district - current_year_adm_district,
+      current_weight_district = ifelse(current_year_extra_weight_district < 1, 1, 0)
+    )
+  
+district_level_df
+```
+:::
+
+The resulting dataframe for one school district after applying the regular expressions rules. @cr-examplestep5
+::::::::
+
+<br><br>
+
+*And then repeating it over across all districts, and all years.*
+
+<br>

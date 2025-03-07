@@ -1,15 +1,14 @@
 ---
 title: "An Overview of Oregon's State Funding Allocation"
 subtitle: "Subtitle"
-editor: visual
+editor_options: 
+  chunk_output_type: console
 author: "Havisha Khurana"
 date: "today"
 date-format: "full"
 format: 
     html:
         embed-resources: true
-        code-fold: true
-        code-link: true
         theme: journal
         highlight: tango
         df-print: paged
@@ -29,6 +28,7 @@ execute:
    warning: false
    error: false
    message: false
+   echo: false
 ---
 
 The state of Oregon uses a student-based funding model to allocate revenues to its 197 school districts. In this analysis, I will describe descriptive trends in district enrollment, districts' state-funding allocation, district revenue, and district expenditure related to students with disabilities whose services cost more than a given threshold and are paid by the grant called *High-Cost Disability Grant*.

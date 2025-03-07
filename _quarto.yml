@@ -3,17 +3,24 @@ project:
   output-dir: docs
 
 website:
-  title: "An overview of Special Education Funding Data"
+  title: "Data Science Capstone"
   navbar:
     left:
       - href: district_adm_plots.qmd
         text: Home
-
+      - href: code_explanation.qmd
+        text: Scraping Code
+      - href: code_explanation2.qmd
+        text: Example run-through
+    right:
+      - icon: github
+        href: https://github.com/havishak/sped-oregon-finance
+        aria-label: GitHub
+  search: false
 format:
   html:
     theme: journal
-    css: styles.css
     toc: true
-
-editor: visual
+# 
+# editor: visual
 
