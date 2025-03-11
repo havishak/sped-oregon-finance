@@ -6,7 +6,12 @@ date-format: "full"
 editor_options: 
   chunk_output_type: console
 format: 
-  closeread-html:
+ closeread-html:
+     cr-style:
+      narrative-background-color-overlay: darkslategrey
+      narrative-text-color-overlay: "#e2e2e2"
+      narrative-font-family: "serif"
+      section-background-color: "#fffbf1"
      embed-resources: true
      theme: journal
      highlight: tango

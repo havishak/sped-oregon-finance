@@ -181,7 +181,7 @@ one_district_info <- function(district_df) {
       past_year_admw_entry = sum(past_year_admw),
       current_year_effective_admw_entry = max(current_year_admw_entry, past_year_admw_entry),
       current_weight_entry = ifelse(
-        current_year_effective_admw_entry == current_year_adm_entry,
+        current_year_effective_admw_entry == current_year_admw_entry,
         1,
         0
       )
@@ -189,8 +189,8 @@ one_district_info <- function(district_df) {
     ungroup() %>%
     mutate(
       current_year_eff_admw_district = sum(unique(current_year_effective_admw_entry)),
-      current_year_extra_weight_district = current_year_eff_admw_district - current_year_adm_district,
-      current_weight_district = ifelse(current_year_extra_weight_district < 1, 1, 0)
+      current_year_extra_weight_district = current_year_eff_admw_district - current_year_admw_district,
+      current_year_weight_district = ifelse(current_year_extra_weight_district < 1, 1, 0)
     )
   
   return(district_level_df)

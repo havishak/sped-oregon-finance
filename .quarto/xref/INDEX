@@ -28,5 +28,11 @@
   },
   "try.qmd": {
     "try.html": "17c62943"
+  },
+  "background.qmd": {
+    "background.html": "54dbaacc"
+  },
+  "district_adm_plots.knit.md": {
+    "district_adm_plots.knit.html": "7608294d"
   }
 }

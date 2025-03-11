@@ -6,9 +6,14 @@ library(ggrepel)
 library(patchwork)
 library(RColorBrewer)
 library(ggsankey)
+library(sf)
+library(readxl)
+library(plotly)
+library(tigris)
 # install.packages("devtools")
 #devtools::install_github("davidsjoberg/ggsankey")
 
+background_color <- "white"
 # This creates a line plot by district across all years for one continuous variable - related to admission
 cont_across_years <- function(df, var_y , var_x, log_on = T,
                               lab_x = "", lab_y = ""){
@@ -24,7 +29,9 @@ cont_across_years <- function(df, var_y , var_x, log_on = T,
     theme_minimal()+
     theme(
       panel.grid = element_blank(),
-      axis.ticks = element_line()
+      axis.ticks = element_line(),
+      plot.background = element_rect(fill =background_color,color = "transparent"),
+      panel.background = element_rect(fill =background_color,color = "transparent")
     ) +
     scale_x_continuous(breaks = unique(df$school_year))+
     labs(
@@ -85,7 +92,9 @@ cont_across_years_w_mean <- function(df, var_y , var_x, log_on = T,
     theme_minimal()+
     theme(
       panel.grid = element_blank(),
-      axis.ticks = element_line()
+      axis.ticks = element_line(),
+      plot.background = element_rect(fill =background_color,color = "transparent"),
+      panel.background = element_rect(fill =background_color,color = "transparent")
     ) +
     scale_x_continuous(breaks = unique(df$school_year))+
     labs(
@@ -142,7 +151,9 @@ one_year_scatterplot_w_bars <- function(df, year = 2022,
     theme_minimal()+
     theme(
       panel.grid = element_blank(),
-      axis.ticks = element_line()
+      axis.ticks = element_line(),
+      plot.background = element_rect(fill =background_color,color = "transparent"),
+      panel.background = element_rect(fill =background_color,color = "transparent")
     )
   
   if(log_x_on == TRUE){
@@ -180,7 +191,9 @@ one_year_scatterplot_w_bars <- function(df, year = 2022,
       theme_minimal()+
       theme(
         panel.grid = element_blank(),
-        axis.ticks = element_line()
+        axis.ticks = element_line(),
+        plot.background = element_rect(fill =background_color,color = "transparent"),
+        panel.background = element_rect(fill =background_color,color = "transparent")
       )
     
     plot <- plot + bar_plot+
@@ -211,12 +224,75 @@ hcd_bar_plot <- function(df, var_x, var_label, title, nudge = 0, seed = 1,
   if(position == "left"){
     plot <- plot +
       scale_x_reverse() +
-      theme(plot.title = element_text(hjust = 1))
+      theme(plot.title = element_text(hjust = 1),
+    plot.background = element_rect(fill =background_color,color = "transparent"),
+    panel.background = element_rect(fill =background_color,color = "transparent"))
   }else{
     plot <- plot +
-      theme(axis.text.y = element_text(color = "gray30"))
+      theme(axis.text.y = element_text(color = "gray30"),
+            plot.background = element_rect(fill =background_color,color = "transparent"),
+            panel.background = element_rect(fill =background_color,color = "transparent"))
   }
   
   return(plot)
   
+}
+
+# state maps
+state_map_var_discrete <- function(df, fill_var, text_var, title, subtitle, return = "plotly"){
+  
+  # create discrete variable
+  
+  df <- df %>%
+    mutate(
+      cat = ntile({{fill_var}}, 5))
+  
+  # plot
+  plot <- ggplot(df,
+                 aes(fill = cat, text = {{text_var}})) +
+    geom_sf(color = "white") +
+    geom_sf_text(aes(label = iso3166_2), size = 3) +
+    theme_void() +
+    labs(title = title,
+         subtitle = subtitle,
+         caption = "Source: US 2022 Census Bureau",
+         fill = "High to Low") +
+    scale_fill_distiller(palette = "PiYG",
+                         labels = rep("", 5)) +
+    theme(
+      text = element_text(family = "serif"),
+      axis.line = element_blank(), 
+          axis.text = element_blank(), 
+          axis.ticks = element_blank(),
+          plot.title = element_text(hjust = 0.5, face = "bold"),
+          plot.subtitle = element_text(hjust = 0.5, face = "italic"),
+      plot.background = element_rect(fill =background_color,color = "transparent"),
+      panel.background = element_rect(fill =background_color,color = "transparent"))
+  
+  # make a plotly object
+  plot_plotly <- ggplotly(plot, tooltip = "text") %>%
+    layout(
+      annotations = list(
+        list(
+          x = 0.5, y = 1.05, # Subtitle position
+          text = subtitle,
+          showarrow = FALSE,
+          xref = "paper", yref = "paper",
+          font = list(size = 14, color = "black", face = "italic")
+        ),
+        list(
+          x = 0.5, y = .01, # Caption position
+          text = "Source: US 2022 Census Bureau", 
+          showarrow = FALSE,
+          xref = "paper", yref = "paper",
+          font = list(size = 12, color = "black")
+        )
+      )
+    ) 
+  
+  if(return == "plot"){
+    return(plot)
+  }else{
+    return(plot_plotly)
+  }
 }

@@ -1,0 +1,297 @@
+---
+title: "Project Context"
+editor_options: 
+  chunk_output_type: console
+author: "Havisha Khurana"
+date: "today"
+date-format: "full"
+format: 
+  closeread-html:
+     cr-style:
+      narrative-background-color-overlay: darkslategrey
+      narrative-text-color-overlay: "#e2e2e2"
+      narrative-font-family: "serif"
+      section-background-color: "#fffbf1"
+     remove-header-space: true
+     embed-resources: true
+     theme: journal
+     mainfont: "serif"
+     backgroundcolor: "#fffbf1"
+     highlight: tango
+     df-print: paged
+     code-overflow: wrap
+     code-line-numbers: true
+     highlight-style: pygments
+execute:
+   warning: false
+   error: false
+   message: false
+   echo: false
+---
+
+
+```{r}
+# library
+library(tidyverse)
+library(sf)
+library(RColorBrewer)
+library(readxl)
+library(plotly)
+library(tigris)
+
+source("code/writeup_plots.R")
+```
+
+
+```{r}
+# Download the Hexagon boundaries at geojson format here: https://team.carto.com/u/andrew/tables/andrew.us_states_hexgrid/public/map.
+
+us_hexagon <- read_sf("data_raw/Other Data/us_states_hexgrid.geojson", quiet = TRUE) %>%
+  # reformat names
+  mutate(google_name = gsub(" \\(United States\\)", "", google_name))
+
+# read sheet 1 on state revenues and expenditures
+# re-named columns
+cols <- c("geoid", "total_revenue", "federal", "state", "local","total_spending",
+          "current_spending", "capital", "other", "debt", "cash_securities")
+
+# data
+us_states_revenue22 <- read_excel("data_raw/Other Data/elsec22_sumtables.xls", 
+    sheet = "1", range = "A10:L71", col_names = FALSE) %>%
+  janitor::clean_names() %>%
+  filter(!is.na(x1)) %>%
+  select(-x2) %>%
+  rename_with(~cols, everything()) %>%
+  mutate(
+    geoid = gsub("\\.","",geoid)) %>%
+  rowwise() %>%
+  mutate(
+    # convert to billion
+    across(-geoid, ~ifelse(!is.numeric(.x), parse_number(.x)/1000000, .x/1000000)),
+    # add state revenue percentage
+    per_state = (state/total_revenue)*100
+  ) %>%
+  ungroup()
+
+# read sheet 19 on enrollment
+us_states_enrollment <- read_excel("data_raw/Other Data/elsec22_sumtables.xls", 
+    sheet = "19", skip = 2) %>%
+  janitor::clean_names() %>%
+  filter(!is.na(geographic_area)) %>%
+  select(geographic_area, elementary_secondary_enrollment) %>%
+  mutate(elementary_secondary_enrollment = parse_number(elementary_secondary_enrollment),
+         geographic_area = gsub("\\.","",geographic_area)) %>%
+  head(., 52)
+
+us_map_data <- us_hexagon %>%
+  left_join(us_states_revenue22, by=c("google_name" = "geoid")) %>%
+  left_join(us_states_enrollment, by=c("google_name" = "geographic_area")) %>%
+  mutate(
+    revenue_pp = total_revenue*1000000000 / elementary_secondary_enrollment,
+    expense_pp = total_spending*1000000000 / elementary_secondary_enrollment,
+    current_expense_pp = current_spending*1000000000 / elementary_secondary_enrollment,
+    account_balance = total_revenue - total_spending,
+    plotly_text = paste0("State: ", google_name,"\n",
+                         "Total Revenue: ",round(total_revenue, 1),"B\n",
+                         "State contribution: ", round(per_state),"%\n",
+                         "Total Expense: ",round(total_spending, 1),"B\n",
+                         "Revenue pp: $", round(revenue_pp),"\n",
+                         "Expense pp: $", round(expense_pp),"\n",
+                         "Balace: ", round(account_balance, 1),"B")
+  )
+```
+
+
+::::::{.cr-section layout="overlay-center"}
+
+:::{#cr-intro}
+```{r}
+ggplot(us_map_data) +
+  geom_sf(fill = "skyblue", color = "white") +
+  #geom_sf_text(aes(label = iso3166_2), size = 2) +
+  theme_void() +
+  theme(
+      plot.background = element_blank(),
+       panel.background = element_rect(fill =background_color,color = "transparent")
+  )
+```
+:::
+
+An overview of United State's education funding. @cr-intro
+
+::::::
+
+
+```{r}
+state_map_var_discrete(us_map_data, total_revenue, plotly_text, "Total Revenue",
+                       subtitle = "In 2022, US education revenue stood at 878 billion dollars.")
+```
+
+::::::{.cr-section layout="sidebar-left"}
+
+
+:::{#cr-totrev}
+```{r}
+state_map_var_discrete(us_map_data, total_revenue, plotly_text, "Total Revenue",
+                       subtitle = "In 2022, US education revenue stood at 878 billion dollars.", return = "plot")
+```
+:::
+
+In 2022, **878 Billion Dollars** were allocated to school districts in the US. @cr-totrev
+
+Some of the states with the biggest school districts had the most revenue, like the east-coast states [@cr-totrev]{pan-to="-40%,-5%" scale-by="2"}
+
+The states with the lowest revnue were in the Midwest, although, they tend to have lower enrollments too. [@cr-totrev]{pan-to="10%,10%" scale-by="2"}
+
+:::{#cr-revenuepp}
+```{r}
+state_map_var_discrete(us_map_data, revenue_pp, plotly_text, "Total Revenue Per Pupil",
+                       subtitle = "The nation-wide per-pupil revenue was $18,910.", return = "plot")
+```
+:::
+
+The per-pupil revenue was **$18,910** @cr-revenuepp
+
+Again, there are two regions with higher revenue per-pupil. Northeast [@cr-revenuepp]{pan-to="-40%,20%" scale-by="1.5"}
+
+And, West coast [@cr-revenuepp]{pan-to="35%,10%" scale-by="2"}
+
+States in the center tend to have lower per-pupil revenue. [@cr-revenuepp]{pan-to="10%,10%" scale-by="2"}
+
+:::{#cr-state}
+```{r}
+state_map_var_discrete(us_map_data, per_state, plotly_text, "State's Contribution",
+                       subtitle = "State sources contributed 43% of the total education revenue.", return = "plot")
+```
+:::
+
+States contributed to **43%** of total revenue. @cr-state
+
+High-state contributors are mostly on the West. [@cr-state]{pan-to="35%,10%" scale-by="2"}
+
+Though there are notable exceptions like, NM, KS, AR [@cr-state]{pan-to="15%,10%" scale-by="2"} 
+
+And, VT [@cr-state]{pan-to="-45%,30%" scale-by="2"}
+
+::: {#cr-spending}
+```{r}
+state_map_var_discrete(us_map_data, total_spending, plotly_text, "Total Spending",
+                       subtitle = "In 2022, US education revenue stood at 857 billion dollars.", return ="plot")
+```
+:::
+
+Spending has the same geographic trends as revenue generation. @cr-spending
+
+::: {#cr-spendingpp}
+```{r}
+state_map_var_discrete(us_map_data, expense_pp, plotly_text, "Spending Per Pupil",
+                       subtitle = "The nation-wide per-pupil spending was $18,460.", return = "plot")
+```
+:::
+
+The same is true for spending per-pupil. @cr-spendingpp
+
+::: {#cr-balance}
+```{r}
+state_map_var_discrete(us_map_data, account_balance, plotly_text, "Year Balance",
+                       subtitle = "There was 21 billion dollars remaining at the end of school year.", return = "plot")
+```
+:::
+
+There was **21 Billion** excess in revenue which was no spent. @cr-balance
+
+::::::
+
+::::::{.cr-section layout="overlay-center"}
+
+:::{#cr-us}
+```{r}
+ggplot(us_map_data) +
+  geom_sf(fill = "skyblue", color = "white") +
+  #geom_sf_text(aes(label = iso3166_2), size = 2) +
+  theme_void() +
+  theme(
+    plot.background = element_rect(fill =background_color,color = "transparent"),
+      panel.background = element_rect(fill =background_color,color = "transparent"))
+```
+:::
+
+So, why study **School Finance?** @cr-us
+
+Because, school finance is an **Intervention** for creating better schools. @cr-us
+
+And, a **lot of money** goes into US Education systems. @cr-us
+
+
+**State policy** purposefully divides money among districts serving diverse student needs. @cr-us
+
+Existing research has described the variation in all aspects of school funding.
+
+However, it hasn't documents the variation in revenue allocation and spending for **Special Population, such as students in special education or English language programs** @cr-us
+
+
+:::{#cr-or}
+
+
+```{r}
+or_school_district <- st_read(
+  "data_raw/EDGE_SCHOOLDISTRICT_TL24_SY2324/EDGE_SCHOOLDISTRICT_TL24_SY2324.shp",
+  quiet = TRUE) %>%
+  janitor::clean_names() %>%
+  filter(statefp == 41) %>%
+  as.data.frame() %>%
+  select(name, lograde, higrade, intptlon, intptlat) %>%
+  mutate(across(c(intptlon, intptlat), parse_number),
+         hover_text = paste0(name, "\n", "Grades: ", lograde,"-",higrade))
+
+or_counties <- counties(cb = TRUE,
+                        resolution = "20m",
+                        class = "sf",
+                        state = "Oregon",
+                        progress_bar= FALSE) %>%
+  janitor::clean_names()
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = or_counties, fill = "#FEE123", color = "gray80", alpha = 0.5) +  # Districts
+  theme_void() +
+  theme(
+      plot.background = element_rect(fill =background_color,color = "transparent"),
+      panel.background = element_rect(fill =background_color,color = "transparent"))
+```
+:::
+
+So, why study **Oregon?** @cr-or
+
+Between **50-60%** Oregon's funding comes from state revenues. @cr-or
+
+Oregon allocates revenue based on student subgroups
+
+  - In programs, like Special education and English-language programs
+
+  - With certain characteristics, like student in poverty, students in foster care/neglected or delinquent, students in parenting programs. @cr-or
+
+And, Oregon tracks school-level spending based on student subgroups - After the 2017 state legislation. @cr-or
+
+::::::
+
+## **Explore the 197 Oregon School Districts**
+
+```{r}
+map <- ggplot() +
+  geom_sf(data = or_counties, fill = "#FEE123", color = "gray80", alpha = 0.5) +  # Districts
+  geom_point(data = or_school_district,
+             aes(x = intptlon, y = intptlat, text = name), color = "#154733", size = 1) +
+  theme_void() +
+  theme(
+    text = element_text(family = "serif"),
+    axis.line = element_blank(), 
+        axis.text = element_blank(), 
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  labs(title = "Location of Oregon School Districts")
+
+  ggplotly(map, tooltip = "name") %>%
+    layout(showlegend = FALSE, paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)")
+```

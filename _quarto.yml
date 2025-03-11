@@ -6,12 +6,14 @@ website:
   title: "Data Science Capstone"
   navbar:
     left:
-      - href: district_adm_plots.qmd
-        text: Home
+      - href: background.qmd
+        text: Motivation  
       - href: code_explanation.qmd
         text: Scraping Code
       - href: code_explanation2.qmd
         text: Scraping Example
+      - href: district_adm_plots.qmd
+        text: Analysis
     right:
       - icon: github
         href: https://github.com/havishak/sped-oregon-finance
@@ -21,6 +23,9 @@ format:
   html:
     theme: journal
     toc: true
+    mainfont: "serif"
+    backgroundcolor: "#fffbf1"
+    highlight: tango
 # 
 # editor: visual
 
