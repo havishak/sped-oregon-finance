@@ -1,7 +1,6 @@
 # script for plots
 library(tidyverse)
 library(gghighlight)
-library(geomtextpath)
 library(ggrepel)
 library(patchwork)
 library(RColorBrewer)
