@@ -83,7 +83,7 @@ hcd_all_year <- readr::read_csv("data_clean/hcd_state_2003_2022.csv") %>%
   select(-1) 
 ```
 
-### Trends in Enrollment Across Years with the Average Highlighted
+### Trends in Enrollment 
 
 ```{r}
 cont_across_years_w_mean(district_year_adm,
@@ -94,12 +94,15 @@ cont_across_years_w_mean(district_year_adm,
              mean_denominator = "",
              log_on = T,
              round_pos = 0,
-             lab_y = "Log of Student Membership")
+             lab_y = "Log of Student Membership") +
+  labs(
+    title = "Oregon Enrollment Trends Across 14 years",
+    subtitle = str_wrap("An average Oregon school districts’ enrollment is around 2800 students, with substantial variation around the mean", 70)
+  )
 ```
 
 An average Oregon school districts’ enrollment is around 2800 students- which remains pretty stable across the years. However, there is substantial variation in enrollment between districts. 
 
-### Trends in Enrollment Across Years with Districts \> 30k enrollment Highlighted
 
 ```{r}
 cont_across_years(district_year_adm,
@@ -110,12 +113,12 @@ cont_across_years(district_year_adm,
   gghighlight(max(current_year_adm_district) > 30000,
               label_key = district_name,
               unhighlighted_params = list(alpha = 0.5)) +
-  scale_color_brewer(palette = "Dark2") 
+  scale_color_brewer(palette = "Dark2") +
+   labs(
+    title = "Oregon Enrollment Trends Across 14 years",
+    subtitle = str_wrap("Portland, Salem-Keizer, and Beaverton are the biggest school districts with more than 35000 students.", 70)
+  )
 ```
-
-The three biggest districts - **Portland, Salem-Keizer, and Beaverton** have more than 35000 students.
-
-### Trends in Enrollment Across Years with Districta 13-20k enrollment Highlighted
 
 ```{r}
 cont_across_years(district_year_adm,
@@ -126,12 +129,13 @@ cont_across_years(district_year_adm,
   gghighlight(max(current_year_adm_district) > 13000 & max(current_year_adm_district) < 30000,
               label_key = district_name,
               unhighlighted_params = list(alpha = 0.5)) +
-  scale_color_brewer(palette = "Dark2")
+  scale_color_brewer(palette = "Dark2")+
+  labs(
+    title = "Oregon Enrollment Trends Across 14 years",
+    subtitle = str_wrap("A handful of districts have more than 13000 students, including Eugene SD 4J", 70)
+  )
 ```
 
-A handful of districts - **including Eugene 4J** have more than 13000 students.
-
-### Trends in Enrollment Across Years with Districts \<10 students Highlighted
 
 ```{r}
 cont_across_years(district_year_adm,
@@ -142,12 +146,15 @@ cont_across_years(district_year_adm,
   gghighlight(max(current_year_adm_district) < 10,
               label_key = district_name,
               unhighlighted_params = list(alpha = 0.5)) +
-  scale_color_brewer(palette = "Dark2")
+  scale_color_brewer(palette = "Dark2")+
+  labs(
+    title = "Oregon Enrollment Trends Across 14 years",
+    subtitle = str_wrap("About 13% of OR school districts have less than 100 students.", 70)
+  )
 ```
 
-About 13% of school districts have less than 100 students.
 
-### Trends in State - Subgroup Enrollment
+### State Trends for Subgroup Enrollment
 
 ```{r}
 district_year_subgroup_enrollment <- district_year_adm %>%
@@ -214,46 +221,52 @@ ggplot(filter(state_year_subgroup_enrollment, school_year < 2023),
   labs(x = NULL,
        y = "Percentage",
        fill = NULL,
-       color = NULL) +
+       color = NULL,
+       title = "State-level subgroup representation",
+       subtitle = str_wrap("Around 40% of Oregon’s students are in programs or demographic categories that get additional funding weights from the state-funding formula.", 60)) +
   theme(legend.position = "bottom") +
   guides(color = "none",
-         fill = "none")+
-  labs(title = "State-level subgroup representation")
+         fill = "none")
 ```
 
-Around 40% of Oregon’s students are in programs or demographic categories that get additional funding weights from the state-funding formula. The three biggest groups are students under poverty, students served in special education and in English language programs.
+The three biggest groups are students under poverty, students served in special education and in English language programs.
 
 In 2011, about 16% of the all students were under poverty, 14% of all students were in special education programs and 9% of students were in the ESL programs. In 2024, students served in special education was the biggest group at 15% followed by students under poverty and students in ELP at around 12%. About 1% of the students are in other programs. 
 
-### Trends in District - Subgroup Enrollment Across Years
+### District Trends for Subgroup Enrollment
 
 Next, we look at the trends percentage of subgroup representation across districts over time. 
 
 ```{r}
 categories <- unique(district_year_subgroup_enrollment$category)[c(1,3:7)]
 
-map(categories, ~cont_across_years_w_mean(df = filter(district_year_subgroup_enrollment, category == .x), var_x = school_year, var_y = prop_current_year_adm, log_on = F,
+pwalk(list(categories, 
+      c("Special Education (or with an Individualized Education Plan aka IEP)",
+        "English as a Second Language Program",
+        categories[3:5],
+        "Students Eligible for High Cost Disability Fund"),
+       1:length(categories)*5),
+      ~print(cont_across_years_w_mean(df = filter(district_year_subgroup_enrollment, category == ..1), var_x = school_year, var_y = prop_current_year_adm, log_on = F,
                                           mean_numerator = current_year_adm,
                                           mean_denominator = total,
-             lab_y = "Proportion of District Membeship") +
-      labs(title = .x))
+             lab_y = "Proportion of District Membeship", seed = ..3) +
+      labs(title = "District-level subgroup representation",
+            subtitle = ..2)))
 ```
 
 Students in special education (IEP or students with an Individualized Education Plans) and English language programs  have been steadily growing over the years, and those classified in poverty are steadily decreasing, but there is plenty of between-district variation. 
 
-Between 0 to 3% of students were classified as HCD between districts between 2018 to 2022.
+Between 0 to 3% of students were classified as HCD (eligible for High Cost Disability Fund) between districts between 2018 to 2022.
 
-### Trends in District - Subgroup Enrollment by Total Enrollment For 2022
+### Relationship between Districts Total Enrollment and Subgroup Enrollment
 
 ```{r}
 
-map(categories, ~one_year_scatterplot_w_bars(df = filter(district_year_subgroup_enrollment, category == .x), var_x = total, var_y = prop_current_year_adm, log_x_on = T, 
+walk2(categories, 1:length(categories)*5, ~one_year_scatterplot_w_bars(df = filter(district_year_subgroup_enrollment, category == .x), var_x = total, var_y = prop_current_year_adm, log_x_on = T, 
                                           log_y_on = F,
                                           var_x_name = "District Membership", 
                                           var_y_name = .x,
-                                  add_bars = T))
-
-
+                                  add_bars = T, seed = .y)%>% print())
 
 ```
 
@@ -281,27 +294,28 @@ one_year_scatterplot_w_bars(df = district_year_adm_summary,
                             log_y_on = F,
                             var_x_name = "Current Year District Membership", 
                             var_y_name = "Allocation Ratio",
-                                  add_bars = T)
+                                  add_bars = T,
+                            seed = 3)
 
 
-one_year_scatterplot_w_bars(df = district_year_adm_summary, 
-                            var_x = current_year_adm_district, 
-                            var_y = eff_adm_admw_ratio, 
-                            log_x_on = T, 
-                            log_y_on = F,
-                            var_x_name = "Current Year District Membership", 
-                            var_y_name = "Effective Allocation Ratio",
-                                  add_bars = T)
+# one_year_scatterplot_w_bars(df = district_year_adm_summary, 
+#                             var_x = current_year_adm_district, 
+#                             var_y = eff_adm_admw_ratio, 
+#                             log_x_on = T, 
+#                             log_y_on = F,
+#                             var_x_name = "Current Year District Membership", 
+#                             var_y_name = "Effective Allocation Ratio",
+                                  # add_bars = T)
 
-one_year_scatterplot_w_bars(df = district_year_adm_summary, 
-                                        
-                            var_x =current_year_adm_district, 
-                            var_y =  difference_ratio, 
-                            log_x_on = T, 
-                            log_y_on = F,
-                            var_x_name = "Current Year Enrollment", 
-                            var_y_name = "Difference: Effective and Calculated Allocation Ratio",
-                                  add_bars = T)
+# one_year_scatterplot_w_bars(df = district_year_adm_summary, 
+#                                         
+#                             var_x =current_year_adm_district, 
+#                             var_y =  difference_ratio, 
+#                             log_x_on = T, 
+#                             log_y_on = F,
+#                             var_x_name = "Current Year Enrollment", 
+#                             var_y_name = "Difference: Effective and Calculated Allocation Ratio",
+#                                   add_bars = T)
 
 # library(lme4)
 # 
@@ -328,10 +342,12 @@ Students in smaller school districts get more per-student revenue allocated (in 
 ```{r}
 revenue <- readr::read_csv("data_clean/district_revenue_sources_2019_2022.csv") %>%
   select(-1) %>%
-  left_join(district_details)
+  left_join(district_details) %>%
+  mutate(source = factor(source, 
+                         levels = c("federal", "state", "local", "intermediate", "other")))
 ```
 
-### State Trends in Per-pupil revenue based on sources
+### State Trends in Per-pupil revenue
 
 ```{r}
 #how much money?
@@ -345,7 +361,9 @@ revenue %>%
     labels = c("0", "5B", "10B", "15B", "20B")
     ) +
   labs(x = NULL,
-       y = "Total Revenue") +
+       y = "Total Revenue",
+       title = "Total Revenue Over Years",
+       subtitle = str_wrap("17-20 Billion Dollars revenue was generated by school districts, although the amount could be biased upward due to COVID-19 relief in these years.", 60)) +
   theme_minimal()
 ```
 
@@ -359,12 +377,13 @@ revenue %>%
   group_by(school_year) %>%
   mutate(total_year = sum(total_source),
          per_category = total_source/total_year) %>%
-  ggplot(., aes(x = school_year, y = per_category, fill = str_to_title(source))) +
+  ggplot(., aes(x = school_year, y = per_category, fill = source)) +
   geom_col(alpha = 0.7) +
   geom_text(aes(label = round(per_category, 2),
                 color = per_category > 0.1),
             position = position_fill()) +
-  scale_fill_brewer(palette = "Dark2") +
+  scale_fill_brewer(palette = "Dark2",
+                    labels = str_to_title(levels(revenue$source))) +
   scale_color_manual(values = c("transparent","gray10")) +
   guides(
     color = "none"
@@ -372,7 +391,9 @@ revenue %>%
   labs(
     x = "",
     y = "Proportion of Revenue",
-    fill = NULL
+    fill = NULL,
+    title = "Disaggregated Revenue by Source",
+    subtitle = str_wrap("State, local, and other sources contribute a larger proportion towards overall revenue. Other sources mostly constitute of unused-balance from prior years.", 60)
   ) +
   theme_minimal() +
   theme(
@@ -397,7 +418,8 @@ revenue %>%
   geom_text(aes(label = round(per_category, 2),
                 color = per_category > 0.05),
             position = position_fill()) +
-  scale_fill_brewer(palette = "Dark2") +
+  scale_fill_brewer(palette = "Dark2",
+                    labels = str_to_title(levels(revenue$source))) +
   scale_color_manual(values = c("transparent","gray10")) +
   guides(
     color = "none"
@@ -405,7 +427,9 @@ revenue %>%
   labs(
     x = "",
     y = "Proportion of Revenue",
-  fill = NULL
+  fill = NULL,
+      title = "Disaggregated Revenue by Source",
+    subtitle = str_wrap("Considering only new revenue, state sources contribute to over half of the overall revenue", 60)
   ) +
   theme_minimal() +
   theme(
@@ -422,12 +446,12 @@ If we remove the other sources and only consider the new money districts get, ab
 
 ### Trends in Per-pupil revenue by Districts based on sources
 
-To be described.
-
 ```{r}
 revenue_sources <- unique(revenue$source)
 
-map(revenue_sources, ~cont_across_years_w_mean(df = filter(revenue, source == .x) %>%
+walk2(revenue_sources,
+      1:length(revenue_sources)*5,
+      ~print(cont_across_years_w_mean(df = filter(revenue, source == .x) %>%
                                                  mutate(ppe = revenue_dollar/current_year_adm_district), 
                                                var_x = school_year, 
                                                var_y = ppe, log_on = T,
@@ -435,16 +459,19 @@ map(revenue_sources, ~cont_across_years_w_mean(df = filter(revenue, source == .x
                                           mean_numerator = "",
                                           mean_denominator = "",
                                           add_dollar = T,
-                                          lab_y = "Per-pupil revenue") +
-      labs(title = paste0("From ", str_to_title(.x)," sources")))
+                                          lab_y = "Per-pupil revenue",
+                                          round_pos = 0,
+                                seed = .y) +
+      labs(title = paste0("From ", str_to_title(.x)," sources"))))
 ```
 
-Describe: Other includes balance in the state account.
+The average per-pupul revenue from all sources, except intermediate, went up from 2019 to 2022. Although the most dramatic increase in revenue was from federal sources, which went up about three times between 2019 to 2021. Revenue from local and intermediate sources remained more consistent over time.
 
 ### Trends in Revenue by District Enrollment
 
 ```{r}
-map(revenue_sources, ~one_year_scatterplot_w_bars(df = filter(revenue, source == .x) %>%
+walk2(revenue_sources,
+      1:length(revenue_sources)*5, ~one_year_scatterplot_w_bars(df = filter(revenue, source == .x) %>%
                                                  mutate(ppe = revenue_dollar/current_year_adm_district), 
                                                var_x = current_year_adm_district, 
                                                var_y = ppe, 
@@ -452,8 +479,11 @@ map(revenue_sources, ~one_year_scatterplot_w_bars(df = filter(revenue, source ==
                                                log_y_on = F,
                                               var_x_name = "Current Year Enrollment", 
                             var_y_name = paste0("Per-pupil Revenue: ",str_to_title(.x)),
-                                  add_bars = T))
+                                  add_bars = T, seed = .y, round_dig = 0) %>% print())
 ```
+
+
+Districts with smaller enrollment have a much higher per-pupil revenue from all sources compared to big districts. The most dramatic difference is in per-pupil revenue by other sources.
 
 ## HCD Population
 
@@ -485,9 +515,9 @@ expense_per_student <- hcd_bar_plot(df = mutate(hcd_all_year, ppe = expenditure_
              var_x = ppe,
              var_label = scales::dollar(round(ppe, -2)),
              title = "Average Expense per student", seed = 2,
-             position = "right")
+             position = "right", nudge = -1000)
 
-hcd_eligible + expense_per_student
+hcd_eligible + expense_per_student 
 ```
 
 Per-pupil expenditure over the threshold was 9000 in 2003 and was 25000 in 2022.
@@ -499,7 +529,7 @@ reimbusement_per_student <- hcd_bar_plot(df = mutate(hcd_all_year, ppe = expendi
              var_x = ppe,
              var_label = scales::dollar(round(ppe, -2)),
              title = "Average Reimbursement per student", seed = 2,
-             position = "left")
+             position = "left", nudge = -1000)
 
 reimbusement_per_student + expense_per_student
 ```

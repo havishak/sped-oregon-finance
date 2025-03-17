@@ -49,4 +49,6 @@ rsconnect/
 data_raw/
 data_clean/
 
+# analyzing variation
+code/explore_variation*
 /.quarto/

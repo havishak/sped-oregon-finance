@@ -13,6 +13,7 @@ library(tigris)
 # install.packages("devtools")
 #devtools::install_github("davidsjoberg/ggsankey")
 
+options(scipen = 10)
 background_color <- "white"
 # This creates a line plot by district across all years for one continuous variable - related to admission
 cont_across_years <- function(df, var_y , var_x, log_on = T,
@@ -59,8 +60,9 @@ cont_across_years <- function(df, var_y , var_x, log_on = T,
 cont_across_years_w_mean <- function(df, var_y , var_x, log_on = T,
                               lab_x = "", lab_y = "", mean_numerator, mean_denominator,
                               mean_type = 1, add_dollar = F,
-                              round_pos = 2){
+                              round_pos = 2, seed = 1){
   
+  set.seed(seed)
   plot_color <- sample(brewer.pal(8, "Dark2"), 1)
   df_mean <- df %>%
     distinct(school_year, district_id, district_name, {{var_y}},
@@ -130,23 +132,24 @@ cont_across_years_w_mean <- function(df, var_y , var_x, log_on = T,
 # one year scatter plot of two variables
 # can also show average proportion of one variable by quintiles of another
 # related to admission
-one_year_scatterplot_w_bars <- function(df, year = 2022, 
+one_year_scatterplot_w_bars <- function(df,
                                  var_y, var_x, log_x_on = T, log_y_on = T,
-                                 add_bars = T,
-                                 var_x_name = "", var_y_name = "") {
+                                 add_bars = T, seed = 1,
+                                 var_x_name = "", var_y_name = "", round_dig = 3) {
   
+  set.seed(seed)
   plot_color <- sample(brewer.pal(8, "Dark2"), 1)
   
   plot <- df %>%
-    filter(school_year == year, !is.na({{var_x}}), !is.na({{var_y}})) %>%
-    distinct(school_year, {{var_x}}, {{var_y}}) %>%
+    filter(!is.na({{var_x}}), !is.na({{var_y}})) %>%
+    distinct(school_year, district_id, {{var_x}}, {{var_y}}) %>%
     ggplot(aes(x = {{var_x}}, y = {{var_y}})) +
     geom_point(color = "gray60", alpha = 0.7) +
-    geom_smooth(se = F, color = plot_color, method = "lm")+
+    geom_smooth(se = F, color = plot_color)+
     labs(
       x = var_x_name,
       y = var_y_name,
-      title = str_wrap(paste0("Relationship between ", var_y_name, " and ",var_x_name), 50)
+      title = str_wrap(paste0("Relationship between ", var_y_name, " and ",var_x_name, " across years"), 50)
     ) +
     theme_minimal()+
     theme(
@@ -170,10 +173,11 @@ one_year_scatterplot_w_bars <- function(df, year = 2022,
   
   if(add_bars == TRUE){
     bar_plot <- df %>%
-      filter(school_year == year, !is.na({{var_x}}), !is.na({{var_y}})) %>%
-      group_by(school_year) %>%
+      filter(!is.na({{var_x}}), !is.na({{var_y}})) %>%
+      ungroup() %>%
+      distinct(school_year, district_id, {{var_x}}, {{var_y}}) %>%
       mutate(rank_x = ntile({{var_x}}, 5)) %>%
-      group_by(school_year, rank_x) %>%
+      group_by(rank_x) %>%
       summarize(
         per_mean = mean({{var_y}})
       ) %>%
@@ -182,6 +186,9 @@ one_year_scatterplot_w_bars <- function(df, year = 2022,
         aes(x = per_mean, y = fct_rev(factor(rank_x)))
       ) +
       geom_col(fill = plot_color) +
+      geom_text(aes(label = round(per_mean, round_dig),
+                    x = per_mean/2),
+                color = "black", size = 3) +
       labs(
         x = var_y_name,
         y = paste0("Quintiles of ", var_x_name),
