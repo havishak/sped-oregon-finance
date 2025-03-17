@@ -26,7 +26,7 @@ closeread_figures/ : Contains images to be added in the webpage descriptions
 
 - Run the code/replicate.R file to install all necessary packages.
 
--  After the project opens, in the terminal, write `quarto render`. This will run all the files and save the outputs in the docs folder. The local website version can be accessed at docs/index.html. 
+-  After the project opens, in the terminal, write `quarto render`. This will run all the files and save the outputs in the docs folder. The local website version can be accessed at docs/index.html. Or, you can do **Build -> Render Website**.
 
 
 ## Data Sources and Cleaning To-Dos
