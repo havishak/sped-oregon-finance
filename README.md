@@ -5,11 +5,29 @@ The repository contains code for cleaning, analyzing, and visualizing data for a
 ## Directory Structre:
 
 code/ : Contains .R scripts for cleaning and making analysis-ready data sets by data sources. Also contains plotting code used in reports.
+
 data_raw/ : Contains requested raw data from Oregon Department of Education, and publically-available Common Core of Data for use in the study (not on github)
+
 data_clean/ : Contains analysis-ready data after applying cleaning script on data_raw (not on Github)
+
 _extension/ : Contains template for closeread quarto extension
+
 docs/ : Place to render .qmds and used by Github to deploy the website
+
 closeread_figures/ : Contains images to be added in the webpage descriptions
+
+## To replicate:
+
+- Clone the repository from the website.
+
+- Request access for data by emailing me, havishak@uoregon.edu
+
+- Load the R project.
+
+- Run the code/replicate.R file to install all necessary packages.
+
+-  After the project opens, in the terminal, write `quarto render`. This will run all the files and save the outputs in the docs folder. The local website version can be accessed at docs/index.html. 
+
 
 ## Data Sources and Cleaning To-Dos
 
