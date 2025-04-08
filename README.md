@@ -1,6 +1,6 @@
 # Analysis of Special Education Finance Data in Oregon
 
-The repository contains code for cleaning, analyzing, and visualizing data for a research project focusing on Oregon's special education funding mechanism and expenditure patterns.
+The repository contains code for cleaning, analyzing, and visualizing data for a research project focusing on Oregon's special education funding mechanism. This was my submission for the Data Science Capstone Project, offered by College of Education, in Winter 2025.
 
 ## Directory Structre:
 
@@ -29,7 +29,7 @@ closeread_figures/ : Contains images to be added in the webpage descriptions
 -  After the project opens, in the terminal, write `quarto render`. This will run all the files and save the outputs in the docs folder. The local website version can be accessed at docs/index.html. Or, you can do **Build -> Render Website**.
 
 
-## Data Sources and Cleaning To-Dos
+## Data Sources and Cleaning Goals
 
 1.  Funding allocation to districts based on student characteristics from 2011-2023
 
@@ -66,41 +66,17 @@ closeread_figures/ : Contains images to be added in the webpage descriptions
 -   [x] From year summary file, get grant aid and threshold
 -   [x] From actual payment file, get all variables (actual expenditure, predicted, and reconciliatory payment)
 
-5.  Data from Other Sources
 
--   [] School enrollment
--   [] Staff and school characteristics
--   [] Community characteristics
+## Data Products
 
-## Analysis and To-Dos
+I deployed my findings through a webpage using scrollytelling features. The website has four sections:
 
-1. Funding Allocation Data
+- Overview of School Funding in the US
+- Walk-through the PDF-scraping process
+- Walk-through example
+- Report on initial findings 
 
--   [] What is the distribution of average daily membership (ADM) across districts and across time?
--   [] What is the distribution of student subgroups that get additional funding across districts and across time?
--   [] Does the distribution of student subgroups that get additional funding vary by average daily membership?
--   [] Of the total allocation in ADM units, what percentage of funding comes from regular vs weighted student characteristics?
--   [] Given the 11% cap on funding allocation for students in special education, what proportion of students on IEP get any additional funding weights? How much weights do they get?
+## Current State
 
-2. Revenue Data
-
--   [] What is the distribution of total revenue generated across districts and years? In per-pupil units?
--   [] What is the composition of revenue across different sources? 
--   [] What is the distribution of total revenue generated from different sources across districts and years? In per-pupil units?
-
-3. High-Cost Disability grant Data
-
--   [] What is the distribution of students eligible for grant across years?
--   [] What is the distribution of total expenditures, expenditures above threshold, and reimbursements under the grant?
-
-4. Expenditure Data
-
--   [] What is the distribution of expenditure across districts and time? In per-pupil units?
--   [] What is the distribution of expenditure by different expense categories across districts and time? In per-pupil units?
--   [] What is the distribution of expenditure by different expense categories flagged by subgroups across districts and time? In per-pupil units?
--   [] Is the distribution of expenses flagged by student subgroups vary from the distribution of expensed for general students across districts and time? In per-pupil units?
-
-5.  Relationships between data
-
-
-
+- I am running further analysis, but not updating the Github repository as I want to archive/preserve the close-read functionality. 
+- Last updated: 4/8/2025
